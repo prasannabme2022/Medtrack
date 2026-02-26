@@ -27,9 +27,13 @@
         <a href="{{ url_for('patient_dashboard') }}"
           class="btn {% if request.endpoint == 'patient_dashboard' %}btn-primary{% endif %}"><i class="fas fa-home"></i>
           Dashboard</a>
+        <a href="{{ url_for('ai_companion') }}"
+          class="btn {% if request.endpoint in ['ai_companion','ai_predict','ai_results'] %}btn-primary{% endif %}"
+          style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;border:none;">
+          <i class="fas fa-brain"></i> AI Health Companion</a>
         <a href="{{ url_for('patient_assistant') }}"
           class="btn {% if request.endpoint == 'patient_assistant' %}btn-primary{% endif %}"><i
-            class="fas fa-robot"></i> AI Health Companion</a>
+            class="fas fa-robot"></i> AI Assistant</a>
         <a href="{{ url_for('patient_chat') }}"
           class="btn {% if request.endpoint == 'patient_chat' %}btn-primary{% endif %}"><i class="fas fa-comments"></i>
           Chat with Doctor</a>
@@ -51,6 +55,10 @@
         <a href="{{ url_for('doctor_dashboard') }}"
           class="btn {% if request.endpoint == 'doctor_dashboard' %}btn-primary{% endif %}"><i
             class="fas fa-stethoscope"></i> Dashboard</a>
+        <a href="{{ url_for('doctor_ai_alerts') }}"
+          class="btn {% if request.endpoint == 'doctor_ai_alerts' %}btn-primary{% endif %}"
+          style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:white;border:none;">
+          <i class="fas fa-brain"></i> AI Alerts</a>
         <a href="{{ url_for('doctor_chat_view') }}"
           class="btn {% if request.endpoint == 'doctor_chat_view' %}btn-primary{% endif %}"><i
             class="fas fa-comments"></i> Comm Center</a>

@@ -1,0 +1,542 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    :root {
+        --ai-primary: #1e40af;
+        --ai-accent: #3b82f6;
+        --ai-glow: rgba(59, 130, 246, 0.18);
+    }
+
+    .ai-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #3b82f6 100%);
+        border-radius: 20px;
+        padding: 2.5rem 2rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ai-hero::before {
+        content: '';
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(99, 179, 237, 0.15) 0%, transparent 70%);
+        top: -80px;
+        right: -60px;
+    }
+
+    .ai-hero-title {
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .ai-hero-subtitle {
+        color: rgba(255, 255, 255, 0.72);
+        font-size: 0.95rem;
+        margin: 0;
+        max-width: 600px;
+    }
+
+    .ai-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: rgba(255, 255, 255, 0.13);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #e0f2fe;
+        font-size: 0.78rem;
+        font-weight: 600;
+        padding: 0.35rem 0.75rem;
+        border-radius: 20px;
+        margin-top: 1rem;
+        backdrop-filter: blur(6px);
+    }
+
+    .form-section {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 2px solid #eff6ff;
+    }
+
+    .section-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem;
+    }
+
+    .form-grid-3 {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 1.2rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+    }
+
+    .form-group.full {
+        grid-column: 1 / -1;
+    }
+
+    label {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    label span.req {
+        color: #ef4444;
+    }
+
+    .ai-input {
+        padding: 0.75rem 1rem;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        color: #1f2937;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        background: #f9fafb;
+        font-family: inherit;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .ai-input:focus {
+        outline: none;
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 3px var(--ai-glow);
+        background: #fff;
+    }
+
+    textarea.ai-input {
+        resize: vertical;
+        min-height: 100px;
+    }
+
+    .upload-area {
+        border: 2.5px dashed #93c5fd;
+        border-radius: 14px;
+        padding: 2.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.25s;
+        background: #eff6ff;
+        position: relative;
+    }
+
+    .upload-area:hover,
+    .upload-area.dragover {
+        border-color: #3b82f6;
+        background: #dbeafe;
+    }
+
+    .upload-area input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+
+    .upload-icon {
+        font-size: 2.5rem;
+        color: #93c5fd;
+        margin-bottom: 0.75rem;
+    }
+
+    .upload-label {
+        font-weight: 600;
+        color: #1e40af;
+        font-size: 0.95rem;
+    }
+
+    .upload-hint {
+        color: #6b7280;
+        font-size: 0.8rem;
+        margin-top: 0.3rem;
+    }
+
+    #file-name-display {
+        margin-top: 0.75rem;
+        font-size: 0.85rem;
+        color: #059669;
+        font-weight: 500;
+        display: none;
+    }
+
+    .info-tip {
+        display: flex;
+        gap: 0.5rem;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: 0.85rem 1rem;
+        font-size: 0.83rem;
+        color: #92400e;
+        margin-top: 1rem;
+    }
+
+    .submit-btn {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+        letter-spacing: 0.02em;
+    }
+
+    .submit-btn:hover {
+        background: linear-gradient(135deg, #1e3a8a, #2563eb);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35);
+        transform: translateY(-1px);
+    }
+
+    .submit-btn:active {
+        transform: translateY(0);
+    }
+
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.75);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .ai-spinner {
+        width: 80px;
+        height: 80px;
+        border: 6px solid rgba(255, 255, 255, 0.2);
+        border-top-color: #60a5fa;
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+    }
+
+    .loading-text {
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .loading-steps {
+        color: rgba(255, 255, 255, 0.65);
+        font-size: 0.85rem;
+        text-align: center;
+        max-width: 280px;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .vitals-unit {
+        position: relative;
+    }
+
+    .vitals-unit::after {
+        content: attr(data-unit);
+        position: absolute;
+        right: 0.75rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 0.78rem;
+        color: #9ca3af;
+        font-weight: 500;
+        pointer-events: none;
+    }
+
+    .vitals-unit .ai-input {
+        padding-right: 3.5rem;
+    }
+
+    @media (max-width: 768px) {
+
+        .form-grid,
+        .form-grid-3 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="ai-spinner"></div>
+    <div class="loading-text">🧠 AI Pipeline Running…</div>
+    <div class="loading-steps" id="loadingStep">Uploading medical image to S3…</div>
+</div>
+
+<div style="max-width:900px; margin:0 auto; padding:1.5rem;">
+
+    <!-- Hero Banner -->
+    <div class="ai-hero">
+        <div class="ai-hero-title">
+            <i class="fas fa-brain" style="color:#93c5fd;"></i>
+            AI Health Companion
+        </div>
+        <p class="ai-hero-subtitle">
+            Submit your medical image, symptom description, and vitals to receive an AI-generated
+            prediction report powered by Amazon Rekognition, Comprehend Medical, and Bedrock.
+        </p>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
+            <span class="ai-badge"><i class="fas fa-shield-alt"></i> HIPAA Compliant</span>
+            <span class="ai-badge"><i class="fas fa-lock"></i> End-to-End Encrypted</span>
+            <span class="ai-badge"><i class="fas fa-robot"></i> AWS Bedrock Powered</span>
+            <span class="ai-badge"><i class="fas fa-user-md"></i> Assistive Only – Doctor Has Final Say</span>
+        </div>
+    </div>
+
+    <form action="{{ url_for('ai_predict') }}" method="POST" enctype="multipart/form-data" id="aiForm"
+        onsubmit="showLoading()">
+
+        <!-- Patient Information -->
+        <div class="form-section">
+            <div class="section-header">
+                <div class="section-icon" style="background:#dbeafe;color:#2563eb;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h2 class="section-title">Patient Information</h2>
+            </div>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="age">Age <span class="req">*</span></label>
+                    <input type="number" id="age" name="age" class="ai-input" placeholder="e.g. 45" min="1" max="120"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="gender">Gender <span class="req">*</span></label>
+                    <select id="gender" name="gender" class="ai-input" required>
+                        <option value="" disabled selected>Select gender</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Non-binary</option>
+                        <option>Prefer not to say</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Symptom Description -->
+        <div class="form-section">
+            <div class="section-header">
+                <div class="section-icon" style="background:#fef3c7;color:#d97706;">
+                    <i class="fas fa-comment-medical"></i>
+                </div>
+                <h2 class="section-title">Symptom Description</h2>
+            </div>
+            <div class="form-group full">
+                <label for="symptoms">Describe your symptoms in detail <span class="req">*</span></label>
+                <textarea id="symptoms" name="symptoms" class="ai-input"
+                    placeholder="E.g. I have been experiencing chest pain for the past 3 days, along with shortness of breath and occasional dizziness. Pain is worse when lying down…"
+                    required></textarea>
+            </div>
+            <div class="info-tip">
+                <i class="fas fa-lightbulb" style="flex-shrink:0;margin-top:0.1rem;"></i>
+                <span>More detail = better prediction. Include onset, duration, severity (1-10), and triggers.</span>
+            </div>
+        </div>
+
+        <!-- Medical Image Upload -->
+        <div class="form-section">
+            <div class="section-header">
+                <div class="section-icon" style="background:#ede9fe;color:#7c3aed;">
+                    <i class="fas fa-x-ray"></i>
+                </div>
+                <h2 class="section-title">Medical Image Upload <span
+                        style="font-weight:400;color:#6b7280;">(Optional)</span></h2>
+            </div>
+            <div class="upload-area" id="uploadArea">
+                <input type="file" name="medical_image" id="medicalImage" accept="image/*,.pdf,.dcm"
+                    onchange="showFileName(this)">
+                <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                <div class="upload-label">Click or drag to upload medical image</div>
+                <div class="upload-hint">X-Ray, MRI, CT Scan, Lab Report — JPG, PNG, PDF up to 16MB</div>
+                <div id="file-name-display">
+                    <i class="fas fa-check-circle"></i> <span id="fname"></span>
+                </div>
+            </div>
+            <div class="info-tip" style="margin-top:0.8rem;">
+                <i class="fas fa-shield-alt" style="flex-shrink:0;margin-top:0.1rem;"></i>
+                <span>Images are securely stored in Amazon S3 with server-side AES-256 encryption and analysed by Amazon
+                    Rekognition.</span>
+            </div>
+        </div>
+
+        <!-- Vitals -->
+        <div class="form-section">
+            <div class="section-header">
+                <div class="section-icon" style="background:#fee2e2;color:#dc2626;">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <h2 class="section-title">Vital Signs & Lab Results</h2>
+            </div>
+            <div class="form-grid-3">
+                <div class="form-group">
+                    <label for="bp">Blood Pressure</label>
+                    <div class="vitals-unit" data-unit="mmHg">
+                        <input type="text" id="bp" name="bp" class="ai-input" placeholder="120/80">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="spo2">Oxygen Saturation (SpO2)</label>
+                    <div class="vitals-unit" data-unit="%">
+                        <input type="number" id="spo2" name="spo2" class="ai-input" placeholder="98" min="50" max="100"
+                            step="0.1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="hba1c">HbA1c</label>
+                    <div class="vitals-unit" data-unit="%">
+                        <input type="number" id="hba1c" name="hba1c" class="ai-input" placeholder="5.5" min="2" max="20"
+                            step="0.1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="wbc">WBC Count</label>
+                    <div class="vitals-unit" data-unit="K/uL">
+                        <input type="number" id="wbc" name="wbc" class="ai-input" placeholder="7.5" min="0" max="100"
+                            step="0.1">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="cholesterol">Cholesterol</label>
+                    <div class="vitals-unit" data-unit="mg/dL">
+                        <input type="number" id="cholesterol" name="cholesterol" class="ai-input" placeholder="180"
+                            min="50" max="500">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Notes -->
+        <div class="form-section">
+            <div class="section-header">
+                <div class="section-icon" style="background:#d1fae5;color:#059669;">
+                    <i class="fas fa-stethoscope"></i>
+                </div>
+                <h2 class="section-title">Additional Notes for Doctor</h2>
+            </div>
+            <div class="form-group full">
+                <label for="doctor_notes">Doctor Notes / Previous Diagnoses</label>
+                <textarea id="doctor_notes" name="doctor_notes" class="ai-input" style="min-height:80px;"
+                    placeholder="E.g. Patient has a history of hypertension. Currently on Amlodipine 5mg. No known drug allergies."></textarea>
+            </div>
+        </div>
+
+        <!-- Disclaimer + Submit -->
+        <div class="form-section" style="border-top:3px solid #eff6ff;">
+            <div class="info-tip" style="background:#fef2f2;border-color:#fecaca;color:#7f1d1d;margin-bottom:1.25rem;">
+                <i class="fas fa-exclamation-triangle" style="flex-shrink:0;color:#dc2626;margin-top:0.1rem;"></i>
+                <span><strong>Medical Disclaimer:</strong> AI predictions are assistive tools only. They do not replace
+                    professional medical advice. Your doctor has the final say in all clinical decisions. All
+                    predictions with confidence &lt;75% are flagged for review.</span>
+            </div>
+            <button type="submit" class="submit-btn" id="submitBtn">
+                <i class="fas fa-brain"></i>
+                Run AI Health Analysis
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    function showFileName(input) {
+        const display = document.getElementById('file-name-display');
+        const fname = document.getElementById('fname');
+        if (input.files && input.files[0]) {
+            fname.textContent = input.files[0].name;
+            display.style.display = 'block';
+        }
+    }
+
+    // Drag-and-drop visual feedback
+    const area = document.getElementById('uploadArea');
+    area.addEventListener('dragover', e => { e.preventDefault(); area.classList.add('dragover'); });
+    area.addEventListener('dragleave', () => area.classList.remove('dragover'));
+    area.addEventListener('drop', e => { e.preventDefault(); area.classList.remove('dragover'); });
+
+    const steps = [
+        'Uploading medical image to S3…',
+        'Analysing image with Amazon Rekognition…',
+        'Extracting clinical entities with Comprehend Medical…',
+        'Running multimodal prediction on Amazon Bedrock…',
+        'Saving results to DynamoDB…',
+        'Checking for critical alerts via SNS…',
+        'Almost done – generating your report…'
+    ];
+    let stepIdx = 0;
+
+    function showLoading() {
+        document.getElementById('loadingOverlay').classList.add('active');
+        document.getElementById('submitBtn').disabled = true;
+        const el = document.getElementById('loadingStep');
+        const interval = setInterval(() => {
+            stepIdx = (stepIdx + 1) % steps.length;
+            el.textContent = steps[stepIdx];
+        }, 1800);
+        // Safety: clear after 60s
+        setTimeout(() => clearInterval(interval), 60000);
+    }
+</script>
+{% endblock %}

@@ -1,10 +1,11 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_from_directory, jsonify
 import os
 # import database # In-Memory DB (for local testing)
 import database_dynamo as database # AWS DynamoDB Adapter (PROD)
 from functools import wraps
 import ml_engine
 from sns_service import sns_client # Import AWS SNS Service
+import ai_engine  # AI Health Companion – multimodal predictive engine
 
 import boto3
 
@@ -682,7 +683,76 @@ def doctor_reply():
         return {'status': 'success'}
     return {'status': 'error', 'message': 'Chat ID not found'}, 404
 
+
+# ─────────────────────────────────────────────────────────────────────────────
+# AI Health Companion Routes
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.route('/ai_companion')
+@login_required
+@role_required('patient')
+def ai_companion():
+    """Patient-facing AI prediction form page."""
+    return render_template('ai_companion.html')
+
+
+@app.route('/ai_predict', methods=['POST'])
+@login_required
+@role_required('patient')
+def ai_predict():
+    """
+    Accepts multimodal patient inputs, triggers the full AWS AI pipeline,
+    and stores the result in the session for display.
+    """
+    patient_data = {
+        'patient_id':    session.get('user_id', 'UNKNOWN'),
+        'patient_name':  session.get('user_name', 'Patient'),
+        'age':           request.form.get('age', ''),
+        'gender':        request.form.get('gender', ''),
+        'symptoms':      request.form.get('symptoms', ''),
+        'bp':            request.form.get('bp', ''),
+        'spo2':          request.form.get('spo2', ''),
+        'hba1c':         request.form.get('hba1c', ''),
+        'wbc':           request.form.get('wbc', ''),
+        'cholesterol':   request.form.get('cholesterol', ''),
+        'doctor_notes':  request.form.get('doctor_notes', ''),
+    }
+
+    image_file = request.files.get('medical_image')
+
+    try:
+        prediction = ai_engine.run_ai_pipeline(patient_data, image_file)
+        # Store in session for results page
+        session['ai_prediction'] = prediction
+        return redirect(url_for('ai_results'))
+    except Exception as e:
+        flash(f'AI pipeline error: {str(e)}', 'error')
+        return redirect(url_for('ai_companion'))
+
+
+@app.route('/ai_results')
+@login_required
+@role_required('patient')
+def ai_results():
+    """Display the structured AI prediction report."""
+    prediction = session.get('ai_prediction')
+    if not prediction:
+        flash('No prediction data found. Please submit the AI form first.', 'error')
+        return redirect(url_for('ai_companion'))
+    return render_template('ai_results.html', prediction=prediction)
+
+
+@app.route('/doctor_ai_alerts')
+@login_required
+@role_required('doctor')
+def doctor_ai_alerts():
+    """Doctor-facing page listing all High/Critical AI predictions."""
+    alerts = ai_engine.get_high_risk_predictions(limit=50)
+    return render_template('doctor_ai_alerts.html', alerts=alerts)
+
+
 if __name__ == '__main__':
+
     # Use database.get_ist_time() to print start time in IST
     try:
         start_time = database.get_formatted_date_time()

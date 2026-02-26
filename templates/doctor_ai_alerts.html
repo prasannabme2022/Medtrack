@@ -1,0 +1,495 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .alerts-hero {
+        background: linear-gradient(135deg, #4c1d95 0%, #7c3aed 60%, #a78bfa 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .alerts-hero::before {
+        content: '';
+        position: absolute;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(196, 181, 253, .2) 0%, transparent 70%);
+        top: -60px;
+        right: -40px;
+    }
+
+    .alerts-hero-title {
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 .4rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .alerts-hero-sub {
+        color: rgba(255, 255, 255, .7);
+        font-size: .9rem;
+        margin: 0;
+    }
+
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-card {
+        background: #fff;
+        border-radius: 14px;
+        padding: 1.25rem;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .07), 0 0 0 1px rgba(0, 0, 0, .04);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        flex-shrink: 0;
+    }
+
+    .alerts-table-wrap {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .07), 0 0 0 1px rgba(0, 0, 0, .04);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .table-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    .table-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .badge-count {
+        background: #fef2f2;
+        color: #dc2626;
+        font-size: .78rem;
+        font-weight: 700;
+        padding: .2rem .6rem;
+        border-radius: 20px;
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: .75rem;
+        align-items: center;
+        padding: .75rem 1.5rem;
+        background: #f9fafb;
+        border-bottom: 1px solid #e5e7eb;
+        flex-wrap: wrap;
+    }
+
+    .filter-btn {
+        padding: .35rem .9rem;
+        border-radius: 20px;
+        border: 1.5px solid #e5e7eb;
+        background: #fff;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        color: #374151;
+    }
+
+    .filter-btn:hover,
+    .filter-btn.active {
+        background: #7c3aed;
+        color: #fff;
+        border-color: #7c3aed;
+    }
+
+    .filter-btn.filter-critical.active {
+        background: #dc2626;
+        border-color: #dc2626;
+    }
+
+    .filter-btn.filter-high.active {
+        background: #ea580c;
+        border-color: #ea580c;
+    }
+
+    .alerts-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .alerts-table thead {
+        background: #f9fafb;
+    }
+
+    .alerts-table th {
+        padding: .85rem 1.25rem;
+        text-align: left;
+        font-size: .82rem;
+        font-weight: 700;
+        color: #6b7280;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+    }
+
+    .alerts-table td {
+        padding: .9rem 1.25rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f3f4f6;
+        font-size: .9rem;
+        color: #374151;
+    }
+
+    .alerts-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .alerts-table tbody tr {
+        transition: background .15s;
+    }
+
+    .alerts-table tbody tr:hover {
+        background: #faf5ff;
+    }
+
+    .sev-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .35rem;
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        padding: .3rem .75rem;
+        border-radius: 20px;
+    }
+
+    .sev-Critical {
+        background: #fef2f2;
+        color: #dc2626;
+        animation: pulse-dot 1.8s infinite;
+    }
+
+    .sev-High {
+        background: #fff7ed;
+        color: #ea580c;
+    }
+
+    @keyframes pulse-dot {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(220, 38, 38, .3);
+        }
+
+        50% {
+            box-shadow: 0 0 0 5px rgba(220, 38, 38, 0);
+        }
+    }
+
+    .alert-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .view-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: linear-gradient(135deg, #4c1d95, #7c3aed);
+        color: #fff;
+        border: none;
+        padding: .4rem .9rem;
+        border-radius: 8px;
+        font-size: .82rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        text-decoration: none;
+    }
+
+    .view-btn:hover {
+        box-shadow: 0 3px 12px rgba(124, 58, 237, .4);
+        transform: translateY(-1px);
+    }
+
+    .no-alerts {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: #9ca3af;
+    }
+
+    .no-alerts i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: .3;
+    }
+
+    .alert-sent-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .2rem .6rem;
+        border-radius: 20px;
+    }
+
+    .sent {
+        background: #d1fae5;
+        color: #059669;
+    }
+
+    .not-sent {
+        background: #f3f4f6;
+        color: #6b7280;
+    }
+
+    .patient-id-pill {
+        font-family: monospace;
+        font-size: .85rem;
+        font-weight: 700;
+        background: #eff6ff;
+        color: #1e40af;
+        padding: .2rem .6rem;
+        border-radius: 6px;
+        border: 1px solid #bfdbfe;
+    }
+
+    .ts-label {
+        font-size: .8rem;
+        color: #9ca3af;
+    }
+
+    @media(max-width:768px) {
+        .stats-row {
+            grid-template-columns: 1fr;
+        }
+
+        .alerts-table th:nth-child(4),
+        .alerts-table td:nth-child(4) {
+            display: none;
+        }
+    }
+</style>
+
+<!-- Compute stats -->
+{% set critical_count = alerts | selectattr('severity','equalto','Critical') | list | length %}
+{% set high_count = alerts | selectattr('severity','equalto','High') | list | length %}
+{% set total_count = alerts | list | length %}
+
+<div style="max-width:1100px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Hero -->
+    <div class="alerts-hero">
+        <div class="alerts-hero-title">
+            <i class="fas fa-bell" style="color:#c4b5fd;"></i>
+            AI Alert Dashboard
+        </div>
+        <p class="alerts-hero-sub">
+            Real-time monitoring of High &amp; Critical AI-flagged patients.
+            All cases require immediate clinical review. Doctor has final say.
+        </p>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1rem;">
+            <span style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);
+                   color:#e9d5ff;font-size:.78rem;font-weight:600;padding:.3rem .75rem;
+                   border-radius:20px;display:inline-flex;align-items:center;gap:.4rem;">
+                <i class="fas fa-sync-alt"></i> Live DynamoDB Scan
+            </span>
+            <span style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);
+                   color:#e9d5ff;font-size:.78rem;font-weight:600;padding:.3rem .75rem;
+                   border-radius:20px;display:inline-flex;align-items:center;gap:.4rem;">
+                <i class="fas fa-robot"></i> AWS Bedrock Powered
+            </span>
+            <span style="background:rgba(255,255,255,.13);border:1px solid rgba(255,255,255,.2);
+                   color:#e9d5ff;font-size:.78rem;font-weight:600;padding:.3rem .75rem;
+                   border-radius:20px;display:inline-flex;align-items:center;gap:.4rem;">
+                <i class="fas fa-shield-alt"></i> HIPAA Compliant
+            </span>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fef2f2;color:#dc2626;">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <div>
+                <div style="font-size:2rem;font-weight:800;color:#1f2937;">{{ critical_count }}</div>
+                <div style="font-size:.85rem;color:#6b7280;">Critical Cases</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#fff7ed;color:#ea580c;">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div>
+                <div style="font-size:2rem;font-weight:800;color:#1f2937;">{{ high_count }}</div>
+                <div style="font-size:.85rem;color:#6b7280;">High Severity Cases</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background:#ede9fe;color:#7c3aed;">
+                <i class="fas fa-brain"></i>
+            </div>
+            <div>
+                <div style="font-size:2rem;font-weight:800;color:#1f2937;">{{ total_count }}</div>
+                <div style="font-size:.85rem;color:#6b7280;">Total AI Flags Today</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Table -->
+    <div class="alerts-table-wrap">
+        <div class="table-header">
+            <h2 class="table-title">
+                <i class="fas fa-list-alt"></i>
+                Flagged Patients
+                <span class="badge-count">{{ total_count }} alert{{ 's' if total_count != 1 else '' }}</span>
+            </h2>
+            <div style="font-size:.82rem;color:#9ca3af;">
+                <i class="fas fa-clock"></i>
+                Last refreshed: just now
+            </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div class="filter-bar">
+            <span style="font-size:.82rem;color:#6b7280;font-weight:600;">Filter:</span>
+            <button class="filter-btn active" onclick="filterAlerts('all',this)">All</button>
+            <button class="filter-btn filter-critical" onclick="filterAlerts('Critical',this)">
+                <span class="alert-dot" style="background:#dc2626;"></span> Critical
+            </button>
+            <button class="filter-btn filter-high" onclick="filterAlerts('High',this)">
+                <span class="alert-dot" style="background:#ea580c;"></span> High
+            </button>
+        </div>
+
+        {% if alerts %}
+        <table class="alerts-table" id="alertsTable">
+            <thead>
+                <tr>
+                    <th>Patient ID</th>
+                    <th>Condition</th>
+                    <th>Severity</th>
+                    <th>Confidence</th>
+                    <th>Timestamp</th>
+                    <th>Alert Sent</th>
+                    <th style="text-align:right;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for alert in alerts %}
+                <tr data-severity="{{ alert.severity }}" class="alert-row">
+                    <td>
+                        <span class="patient-id-pill">{{ alert.patient_id }}</span>
+                    </td>
+                    <td>
+                        <div style="font-weight:500;color:#1f2937;max-width:260px;">{{ alert.condition }}</div>
+                    </td>
+                    <td>
+                        <span class="sev-pill sev-{{ alert.severity }}">
+                            {% if alert.severity == 'Critical' %}<i class="fas fa-exclamation-circle"></i>
+                            {% else %}<i class="fas fa-exclamation-triangle"></i>{% endif %}
+                            {{ alert.severity }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong>{{ alert.confidence_score }}</strong>
+                    </td>
+                    <td>
+                        <div style="font-size:.88rem;color:#374151;">
+                            {{ alert.timestamp[:10] if alert.timestamp else 'N/A' }}
+                        </div>
+                        <div class="ts-label">{{ alert.timestamp[11:19] if alert.timestamp and alert.timestamp|length >
+                            10 else '' }} UTC</div>
+                    </td>
+                    <td>
+                        {% if alert.alert_sent == 'True' or alert.alert_sent == True %}
+                        <span class="alert-sent-badge sent">
+                            <i class="fas fa-check-circle"></i> Sent
+                        </span>
+                        {% else %}
+                        <span class="alert-sent-badge not-sent">
+                            <i class="fas fa-clock"></i> Pending
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="text-align:right;">
+                        <a href="{{ url_for('ai_companion') }}" class="view-btn">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="no-alerts">
+            <div><i class="fas fa-check-circle" style="color:#10b981;opacity:1;font-size:3rem;"></i></div>
+            <h3 style="color:#1f2937;margin:.75rem 0 .5rem;">No High-Risk Alerts</h3>
+            <p style="font-size:.9rem;">All AI predictions are within normal or moderate severity range.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Info Box -->
+    <div style="background:#ede9fe;border-radius:12px;padding:1rem 1.25rem;
+              font-size:.85rem;color:#4c1d95;
+              display:flex;gap:.75rem;align-items:flex-start;">
+        <i class="fas fa-info-circle" style="flex-shrink:0;margin-top:.1rem;"></i>
+        <div>
+            <strong>Clinical Guidance:</strong>
+            These AI-generated alerts are advisory tools only. The attending physician has full clinical authority.
+            All predictions with confidence &lt;75% are flagged for mandatory physician review.
+            SNS email notifications are automatically triggered for all High and Critical cases.
+        </div>
+    </div>
+
+</div>
+
+<script>
+    function filterAlerts(severity, btn) {
+        // Update button states
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Filter rows
+        const rows = document.querySelectorAll('.alert-row');
+        rows.forEach(row => {
+            const sev = row.getAttribute('data-severity');
+            row.style.display = (severity === 'all' || sev === severity) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

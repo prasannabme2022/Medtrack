@@ -1,0 +1,708 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    /* ─── Design tokens ─────────────────────────────────────────────────── */
+    :root {
+        --sev-low: #059669;
+        --sev-low-bg: #d1fae5;
+        --sev-moderate: #d97706;
+        --sev-moderate-bg: #fef3c7;
+        --sev-high: #ea580c;
+        --sev-high-bg: #ffedd5;
+        --sev-critical: #dc2626;
+        --sev-critical-bg: #fee2e2;
+    }
+
+    .results-hero {
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 60%, #3b82f6 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .results-hero::before {
+        content: '';
+        position: absolute;
+        width: 260px;
+        height: 260px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(99, 179, 237, .15) 0%, transparent 70%);
+        top: -70px;
+        right: -50px;
+    }
+
+    .results-hero-title {
+        font-size: 1.7rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .results-hero-meta {
+        color: rgba(255, 255, 255, .68);
+        font-size: .9rem;
+        margin: 0;
+    }
+
+    .sev-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .82rem;
+        font-weight: 700;
+        padding: .35rem .9rem;
+        border-radius: 20px;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+
+    .sev-Low {
+        background: var(--sev-low-bg);
+        color: var(--sev-low);
+    }
+
+    .sev-Moderate {
+        background: var(--sev-moderate-bg);
+        color: var(--sev-moderate);
+    }
+
+    .sev-High {
+        background: var(--sev-high-bg);
+        color: var(--sev-high);
+    }
+
+    .sev-Critical {
+        background: var(--sev-critical-bg);
+        color: var(--sev-critical);
+        animation: pulse-sev 1.6s infinite;
+    }
+
+    @keyframes pulse-sev {
+
+        0%,
+        100% {
+            box-shadow: 0 0 0 0 rgba(220, 38, 38, .4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+        }
+    }
+
+    .card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 1.75rem;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .07), 0 0 0 1px rgba(0, 0, 0, .04);
+        margin-bottom: 1.5rem;
+    }
+
+    .card-header {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: 1.25rem;
+        padding-bottom: .75rem;
+        border-bottom: 2px solid #f3f4f6;
+    }
+
+    .card-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .95rem;
+        flex-shrink: 0;
+    }
+
+    .card-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    /* Confidence bar */
+    .conf-bar-wrap {
+        background: #e5e7eb;
+        border-radius: 99px;
+        height: 12px;
+        overflow: hidden;
+        margin: .5rem 0;
+    }
+
+    .conf-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        background: linear-gradient(90deg, #10b981, #3b82f6);
+        transition: width 1s ease;
+    }
+
+    /* ICD badge */
+    .icd-badge {
+        display: inline-block;
+        background: #eff6ff;
+        color: #1e40af;
+        font-family: monospace;
+        font-size: .85rem;
+        font-weight: 700;
+        padding: .25rem .65rem;
+        border-radius: 6px;
+        border: 1px solid #bfdbfe;
+    }
+
+    /* Risk flags */
+    .risk-flag {
+        display: flex;
+        align-items: flex-start;
+        gap: .6rem;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 10px;
+        padding: .85rem 1rem;
+        margin-bottom: .75rem;
+        font-size: .9rem;
+        color: #7f1d1d;
+    }
+
+    .risk-flag i {
+        color: #dc2626;
+        margin-top: .1rem;
+        flex-shrink: 0;
+    }
+
+    /* Timeline */
+    .timeline {
+        position: relative;
+        padding-left: 2.5rem;
+    }
+
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 14px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #e5e7eb;
+    }
+
+    .tl-item {
+        position: relative;
+        margin-bottom: 1.25rem;
+    }
+
+    .tl-dot {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: absolute;
+        left: -38px;
+        top: 0;
+        font-size: .75rem;
+        color: white;
+    }
+
+    .tl-label {
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        margin-bottom: .25rem;
+    }
+
+    .tl-content {
+        background: #f9fafb;
+        border-radius: 10px;
+        padding: .85rem 1rem;
+        font-size: .9rem;
+        color: #374151;
+        border-left: 3px solid;
+    }
+
+    /* Modality insights */
+    .modality-card {
+        display: flex;
+        gap: .75rem;
+        align-items: flex-start;
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: .75rem;
+    }
+
+    .modality-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .9rem;
+        flex-shrink: 0;
+    }
+
+    /* Differential diagnoses */
+    .diff-row {
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+        border-bottom: 1px solid #f3f4f6;
+        padding: .7rem 0;
+    }
+
+    .diff-row:last-child {
+        border-bottom: none;
+    }
+
+    .diff-bar-wrap {
+        flex: 1;
+        background: #e5e7eb;
+        border-radius: 99px;
+        height: 6px;
+    }
+
+    .diff-bar-fill {
+        height: 6px;
+        border-radius: 99px;
+        background: #3b82f6;
+    }
+
+    /* Key factors pills */
+    .factor-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        background: #eff6ff;
+        color: #1e40af;
+        font-size: .82rem;
+        font-weight: 600;
+        padding: .3rem .75rem;
+        border-radius: 20px;
+        border: 1px solid #bfdbfe;
+        margin: .25rem;
+    }
+
+    /* Warning banner */
+    .low-conf-banner {
+        display: flex;
+        gap: .75rem;
+        align-items: flex-start;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: #78350f;
+        font-size: .9rem;
+    }
+
+    .low-conf-banner i {
+        flex-shrink: 0;
+        color: #f59e0b;
+        font-size: 1.1rem;
+        margin-top: .05rem;
+    }
+
+    /* Alert banner */
+    .alert-banner {
+        display: flex;
+        gap: .75rem;
+        align-items: flex-start;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        color: #7f1d1d;
+        font-size: .9rem;
+    }
+
+    .alert-banner i {
+        flex-shrink: 0;
+        color: #dc2626;
+        font-size: 1.1rem;
+        margin-top: .05rem;
+    }
+
+    /* Specialist referral */
+    .referral-box {
+        display: flex;
+        gap: .75rem;
+        align-items: center;
+        background: linear-gradient(135deg, #eff6ff, #dbeafe);
+        border-radius: 12px;
+        padding: 1rem;
+        border: 1px solid #bfdbfe;
+        margin-top: .5rem;
+    }
+
+    .referral-box i {
+        font-size: 1.3rem;
+        color: #2563eb;
+    }
+
+    .action-btns {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1.5rem;
+    }
+
+    .action-btn {
+        flex: 1;
+        padding: .85rem;
+        border: none;
+        border-radius: 12px;
+        font-size: .9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .5rem;
+        text-decoration: none;
+    }
+
+    .btn-primary-ai {
+        background: linear-gradient(135deg, #1e40af, #3b82f6);
+        color: white;
+    }
+
+    .btn-primary-ai:hover {
+        box-shadow: 0 4px 14px rgba(37, 99, 235, .35);
+        transform: translateY(-1px);
+    }
+
+    .btn-outline-ai {
+        background: #fff;
+        color: #1e40af;
+        border: 1.5px solid #bfdbfe;
+    }
+
+    .btn-outline-ai:hover {
+        background: #eff6ff;
+    }
+
+    .sim-note {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+        border-radius: 10px;
+        padding: .75rem 1rem;
+        font-size: .8rem;
+        color: #166534;
+        margin-top: .5rem;
+        display: flex;
+        gap: .5rem;
+    }
+
+    @media(max-width:768px) {
+        .two-col {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+{% set sev = prediction.primary_prediction.severity %}
+{% set conf_val = prediction.confidence_score | replace('%','') | int(0) %}
+
+<div style="max-width:960px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Low-confidence warning -->
+    {% if prediction.low_confidence_warning %}
+    <div class="low-conf-banner">
+        <i class="fas fa-exclamation-triangle"></i>
+        <div>
+            <strong>Low Confidence Warning:</strong> This prediction has a confidence score below 75%
+            ({{ prediction.confidence_score }}). Results should be verified by a qualified physician before acting.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Critical alert banner -->
+    {% if sev in ['High','Critical'] %}
+    <div class="alert-banner">
+        <i class="fas fa-bell"></i>
+        <div>
+            <strong>Alert Triggered:</strong> {{ prediction.alert_trigger.message }}
+            Your doctor has been notified via the AI Alert system.
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Hero -->
+    <div class="results-hero">
+        <div class="results-hero-title">
+            <i class="fas fa-brain" style="color:#93c5fd;"></i>
+            AI Prediction Report
+        </div>
+        <p class="results-hero-meta">
+            Patient ID: <strong style="color:#e0f2fe;">{{ prediction.patient_id }}</strong>
+            &nbsp;·&nbsp;
+            Generated: <strong style="color:#e0f2fe;">{{ prediction.timestamp[:19].replace('T',' ') }} UTC</strong>
+            {% if prediction._source == 'simulation' %}
+            &nbsp;·&nbsp;<span
+                style="background:rgba(255,255,255,.12);color:#bfdbfe;font-size:.78rem;padding:.2rem .6rem;border-radius:10px;font-weight:600;">
+                <i class="fas fa-flask"></i> Simulation Mode
+            </span>
+            {% else %}
+            &nbsp;·&nbsp;<span
+                style="background:rgba(255,255,255,.12);color:#bbf7d0;font-size:.78rem;padding:.2rem .6rem;border-radius:10px;font-weight:600;">
+                <i class="fas fa-check-circle"></i> AWS Bedrock
+            </span>
+            {% endif %}
+        </p>
+    </div>
+
+    <!-- Primary Prediction + Confidence -->
+    <div class="two-col">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-diagnoses"></i></div>
+                <h2 class="card-title">Primary Prediction</h2>
+            </div>
+            <div style="font-size:1.25rem;font-weight:700;color:#1f2937;margin-bottom:.75rem;">
+                {{ prediction.primary_prediction.condition }}
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;">
+                <span class="sev-badge sev-{{ sev }}">
+                    {% if sev == 'Critical' %}<i class="fas fa-exclamation-circle"></i>
+                    {% elif sev == 'High' %}<i class="fas fa-exclamation-triangle"></i>
+                    {% elif sev == 'Moderate' %}<i class="fas fa-info-circle"></i>
+                    {% else %}<i class="fas fa-check-circle"></i>{% endif %}
+                    {{ sev }}
+                </span>
+                <span class="icd-badge">ICD-10: {{ prediction.primary_prediction.icd_10_code }}</span>
+            </div>
+            <div style="font-size:.85rem;color:#6b7280;">Probability: <strong style="color:#1f2937;">{{
+                    prediction.primary_prediction.probability }}</strong></div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon" style="background:#dbeafe;color:#2563eb;"><i class="fas fa-chart-line"></i></div>
+                <h2 class="card-title">Confidence Score</h2>
+            </div>
+            <div style="font-size:2.5rem;font-weight:800;color:#1e40af;margin-bottom:.25rem;">
+                {{ prediction.confidence_score }}
+            </div>
+            <div class="conf-bar-wrap">
+                <div class="conf-bar-fill" id="confBar" style="width:0%;"></div>
+            </div>
+            <div style="font-size:.82rem;color:#6b7280;margin-top:.4rem;">
+                {% if conf_val >= 75 %}
+                <i class="fas fa-check-circle" style="color:#059669;"></i> High confidence – clinician review
+                recommended
+                {% else %}
+                <i class="fas fa-exclamation-circle" style="color:#f59e0b;"></i> Below threshold – mandatory physician
+                review
+                {% endif %}
+            </div>
+            {% if prediction._source == 'simulation' %}
+            <div class="sim-note">
+                <i class="fas fa-info-circle"></i>
+                Report generated via intelligent simulation (AWS Bedrock not connected in this environment).
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Risk Flags -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:#fee2e2;color:#dc2626;"><i class="fas fa-flag"></i></div>
+            <h2 class="card-title">Risk Flags</h2>
+        </div>
+        {% for flag in prediction.risk_flags %}
+        <div class="risk-flag">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ flag }}
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Recommended Actions Timeline -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:#d1fae5;color:#059669;"><i class="fas fa-tasks"></i></div>
+            <h2 class="card-title">Recommended Actions</h2>
+        </div>
+        <div class="timeline">
+            <!-- Immediate -->
+            <div class="tl-item">
+                <div class="tl-dot" style="background:#dc2626;">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <div class="tl-label" style="color:#dc2626;">Immediate</div>
+                <div class="tl-content" style="border-color:#fca5a5;">
+                    {{ prediction.recommended_actions.immediate }}
+                </div>
+            </div>
+            <!-- Short-term -->
+            <div class="tl-item">
+                <div class="tl-dot" style="background:#d97706;">
+                    <i class="fas fa-calendar-week"></i>
+                </div>
+                <div class="tl-label" style="color:#d97706;">Short-term (48–72 hrs)</div>
+                <div class="tl-content" style="border-color:#fcd34d;">
+                    {{ prediction.recommended_actions.short_term }}
+                </div>
+            </div>
+            <!-- Long-term -->
+            <div class="tl-item">
+                <div class="tl-dot" style="background:#2563eb;">
+                    <i class="fas fa-calendar-alt"></i>
+                </div>
+                <div class="tl-label" style="color:#2563eb;">Long-term</div>
+                <div class="tl-content" style="border-color:#93c5fd;">
+                    {{ prediction.recommended_actions.long_term }}
+                </div>
+            </div>
+            <!-- Specialist -->
+            <div class="referral-box">
+                <i class="fas fa-user-md"></i>
+                <div>
+                    <div
+                        style="font-size:.8rem;color:#1e40af;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">
+                        Specialist Referral</div>
+                    <div style="font-size:.95rem;font-weight:600;color:#1f2937;">{{
+                        prediction.recommended_actions.specialist_referral }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modality Insights -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-layer-group"></i></div>
+            <h2 class="card-title">Modality Insights</h2>
+        </div>
+        <div class="modality-card">
+            <div class="modality-icon" style="background:#ede9fe;color:#7c3aed;"><i class="fas fa-x-ray"></i></div>
+            <div>
+                <div
+                    style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#7c3aed;margin-bottom:.25rem;">
+                    Image Analysis (Rekognition)
+                </div>
+                <div style="font-size:.9rem;color:#374151;">{{ prediction.modality_insights.image_findings }}</div>
+            </div>
+        </div>
+        <div class="modality-card">
+            <div class="modality-icon" style="background:#fef3c7;color:#d97706;"><i class="fas fa-comment-medical"></i>
+            </div>
+            <div>
+                <div
+                    style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#d97706;margin-bottom:.25rem;">
+                    Symptom Text Analysis (Comprehend Medical)
+                </div>
+                <div style="font-size:.9rem;color:#374151;">{{ prediction.modality_insights.text_findings }}</div>
+            </div>
+        </div>
+        <div class="modality-card">
+            <div class="modality-icon" style="background:#fee2e2;color:#dc2626;"><i class="fas fa-heartbeat"></i></div>
+            <div>
+                <div
+                    style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#dc2626;margin-bottom:.25rem;">
+                    Vitals Analysis
+                </div>
+                <div style="font-size:.9rem;color:#374151;">{{ prediction.modality_insights.vitals_analysis }}</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Differential Diagnoses + Explainability -->
+    <div class="two-col">
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon" style="background:#f0fdf4;color:#059669;"><i class="fas fa-stethoscope"></i>
+                </div>
+                <h2 class="card-title">Differential Diagnoses</h2>
+            </div>
+            {% for diff in prediction.differential_diagnoses %}
+            {% set pct = diff.probability | replace('%','') | int(0) %}
+            <div class="diff-row">
+                <div style="flex:1;font-size:.9rem;color:#1f2937;font-weight:500;">{{ diff.condition }}</div>
+                <span style="font-size:.85rem;font-weight:700;color:#374151;min-width:3rem;text-align:right;">{{
+                    diff.probability }}</span>
+                <div class="diff-bar-wrap" style="min-width:80px;">
+                    <div class="diff-bar-fill" style="width:{{ pct }}%;"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon" style="background:#eff6ff;color:#2563eb;"><i class="fas fa-lightbulb"></i></div>
+                <h2 class="card-title">AI Explainability</h2>
+            </div>
+            <div style="margin-bottom:1rem;">
+                <div
+                    style="font-size:.8rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#6b7280;margin-bottom:.5rem;">
+                    Key Factors</div>
+                {% for factor in prediction.explainability.key_factors %}
+                <span class="factor-pill"><i class="fas fa-dot-circle"></i>{{ factor }}</span>
+                {% endfor %}
+            </div>
+            <div style="font-size:.88rem;color:#374151;line-height:1.6;margin-bottom:1rem;">
+                <strong>Reasoning:</strong> {{ prediction.explainability.reasoning }}
+            </div>
+            <div style="background:#fffbeb;border-radius:8px;padding:.75rem;font-size:.83rem;color:#92400e;">
+                <i class="fas fa-exclamation-circle"></i>
+                <strong> Data Gaps:</strong> {{ prediction.explainability.data_gaps }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="action-btns">
+        <a href="{{ url_for('ai_companion') }}" class="action-btn btn-outline-ai">
+            <i class="fas fa-redo"></i> New Analysis
+        </a>
+        <a href="{{ url_for('book_appointment') }}" class="action-btn btn-primary-ai">
+            <i class="fas fa-calendar-plus"></i> Book Doctor Appointment
+        </a>
+        <button onclick="window.print()" class="action-btn btn-outline-ai">
+            <i class="fas fa-print"></i> Print Report
+        </button>
+    </div>
+
+    <div style="text-align:center;margin-top:1.5rem;font-size:.8rem;color:#9ca3af;">
+        <i class="fas fa-shield-alt"></i>
+        This report is stored securely in Amazon DynamoDB · All data encrypted with AES-256 ·
+        AI predictions are assistive only — your doctor has the final say.
+    </div>
+
+</div>
+
+<script>
+    // Animate confidence bar on load
+    window.addEventListener('DOMContentLoaded', () => {
+        const val = {{ conf_val }
+    };
+    setTimeout(() => {
+        const bar = document.getElementById('confBar');
+        if (bar) bar.style.width = val + '%';
+    }, 300);
+  });
+</script>
+{% endblock %}
