@@ -12,87 +12,365 @@
 
 <body>
 
-  <div class="app-container">
-    <!-- Sidebar -->
-    <aside class="sidebar glass-panel">
-      <div class="brand">
-        <h2 class="text-gradient"><i class="fas fa-heartbeat"></i> MedTrack</h2>
-      </div>
+  <!-- ═══════════════ SIDEBAR ═══════════════ -->
+  <aside class="sidebar glass-panel"
+    style="width:270px;padding:1.5rem 1.25rem;display:flex;flex-direction:column;gap:0;overflow-y:auto;overflow-x:hidden;">
 
-      <nav>
-        <a href="{{ url_for('index') }}" class="btn"><i class="fas fa-home"></i> Home</a>
-        <a href="{{ url_for('about') }}" class="btn"><i class="fas fa-info-circle"></i> About</a>
-
-        {% if current_role == 'patient' %}
-        <a href="{{ url_for('patient_dashboard') }}"
-          class="btn {% if request.endpoint == 'patient_dashboard' %}btn-primary{% endif %}"><i class="fas fa-home"></i>
-          Dashboard</a>
-        <a href="{{ url_for('ai_companion') }}"
-          class="btn {% if request.endpoint in ['ai_companion','ai_predict','ai_results'] %}btn-primary{% endif %}"
-          style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:white;border:none;">
-          <i class="fas fa-brain"></i> AI Health Companion</a>
-        <a href="{{ url_for('patient_assistant') }}"
-          class="btn {% if request.endpoint == 'patient_assistant' %}btn-primary{% endif %}"><i
-            class="fas fa-robot"></i> AI Assistant</a>
-        <a href="{{ url_for('patient_chat') }}"
-          class="btn {% if request.endpoint == 'patient_chat' %}btn-primary{% endif %}"><i class="fas fa-comments"></i>
-          Chat with Doctor</a>
-        <a href="{{ url_for('book_appointment') }}"
-          class="btn {% if request.endpoint == 'book_appointment' %}btn-primary{% endif %}"><i
-            class="fas fa-calendar-plus"></i> Book Now</a>
-        <a href="{{ url_for('patient_invoices') }}"
-          class="btn {% if request.endpoint == 'patient_invoices' %}btn-primary{% endif %}"><i
-            class="fas fa-file-invoice-dollar"></i> Invoices</a>
-        <a href="{{ url_for('patient_vault') }}"
-          class="btn {% if request.endpoint == 'patient_vault' %}btn-primary{% endif %}"><i
-            class="fas fa-file-medical"></i> Medical Vault</a>
-
-        <button onclick="toggleEmergency()" class="btn"
-          style="background: #fee2e2; color: #ef4444; margin-top: 1rem; border: 1px solid #fecaca; font-weight: bold; animation: pulse 2s infinite;">
-          <i class="fas fa-ambulance"></i> SOS / Emergency
-        </button>
-        {% elif current_role == 'doctor' %}
-        <a href="{{ url_for('doctor_dashboard') }}"
-          class="btn {% if request.endpoint == 'doctor_dashboard' %}btn-primary{% endif %}"><i
-            class="fas fa-stethoscope"></i> Dashboard</a>
-        <a href="{{ url_for('doctor_ai_alerts') }}"
-          class="btn {% if request.endpoint == 'doctor_ai_alerts' %}btn-primary{% endif %}"
-          style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:white;border:none;">
-          <i class="fas fa-brain"></i> AI Alerts</a>
-        <a href="{{ url_for('doctor_chat_view') }}"
-          class="btn {% if request.endpoint == 'doctor_chat_view' %}btn-primary{% endif %}"><i
-            class="fas fa-comments"></i> Comm Center</a>
-        {% endif %}
-
-        <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 1rem 0;">
-
-        <a href="{{ url_for('logout') }}" class="btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-      </nav>
-
-      <div style="margin-top: auto; font-size: 0.8rem; color: #6b7280;">
-        Logged in as<br><strong>{{ current_user }}</strong>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-      <!-- Flash Messages -->
-      {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-      <div class="flash-container" style="margin-bottom: 1rem;">
-        {% for category, message in messages %}
-        <div class="glass-card flash-message"
-          style="background: white; border-left: 4px solid var(--secondary); padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
-          <span>{{ message }}</span>
-          <i class="fas fa-times" onclick="this.parentElement.remove()" style="cursor: pointer;"></i>
+    <!-- Brand -->
+    <div style="margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid rgba(0,0,0,0.07);">
+      <h2 class="text-gradient" style="margin:0;font-size:1.35rem;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fas fa-heartbeat"></i> MedTrack
+      </h2>
+      {% if current_user %}
+      <div style="margin-top:0.6rem;display:flex;align-items:center;gap:0.6rem;">
+        <div style="width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,#667eea,#764ba2);
+                      display:flex;align-items:center;justify-content:center;color:white;
+                      font-size:0.8rem;font-weight:700;flex-shrink:0;">
+          {{ current_user[0] | upper }}
         </div>
-        {% endfor %}
+        <div>
+          <div style="font-size:0.82rem;font-weight:600;color:#1f2937;line-height:1.2;">{{ current_user }}</div>
+          <div style="font-size:0.72rem;color:#6b7280;text-transform:capitalize;">{{ current_role }}</div>
+        </div>
       </div>
       {% endif %}
-      {% endwith %}
+    </div>
 
-      {% block content %}{% endblock %}
-    </main>
+    <nav style="display:flex;flex-direction:column;gap:0.25rem;flex:1;">
+
+      <!-- ── General ──────────────────────────── -->
+      <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+                    color:#9ca3af;margin:0 0 0.4rem 0.25rem;">General</div>
+
+      <a href="{{ url_for('home') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;
+                  transition:all 0.18s;{% if request.endpoint=='home' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-home" style="width:16px;text-align:center;opacity:0.7;"></i> Home
+      </a>
+      <a href="{{ url_for('about') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;
+                  transition:all 0.18s;{% if request.endpoint=='about' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-info-circle" style="width:16px;text-align:center;opacity:0.7;"></i> About
+      </a>
+
+      {% if current_role == 'patient' %}
+
+      <!-- ── Patient Navigation ────────────────── -->
+      <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+                    color:#9ca3af;margin:0.9rem 0 0.4rem 0.25rem;">Navigation</div>
+
+      <a href="{{ url_for('patient_dashboard') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;transition:all 0.18s;
+                  {% if request.endpoint=='patient_dashboard' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-th-large" style="width:16px;text-align:center;opacity:0.7;"></i> Dashboard
+      </a>
+      <a href="{{ url_for('patient_chat') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;transition:all 0.18s;
+                  {% if request.endpoint=='patient_chat' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-comments" style="width:16px;text-align:center;opacity:0.7;"></i> Chat with Doctor
+      </a>
+      <a href="{{ url_for('book_appointment') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;transition:all 0.18s;
+                  {% if request.endpoint=='book_appointment' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-calendar-plus" style="width:16px;text-align:center;opacity:0.7;"></i> Book Appointment
+      </a>
+      <a href="{{ url_for('patient_invoices') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;transition:all 0.18s;
+                  {% if request.endpoint=='patient_invoices' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-file-invoice-dollar" style="width:16px;text-align:center;opacity:0.7;"></i> Invoices
+      </a>
+      <a href="{{ url_for('patient_vault') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;transition:all 0.18s;
+                  {% if request.endpoint=='patient_vault' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-file-medical" style="width:16px;text-align:center;opacity:0.7;"></i> Medical Vault
+      </a>
+
+      <!-- ── AI ENGINE ─── Premium Section ──────── -->
+      <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+                    color:#7c3aed;margin:1rem 0 0.5rem 0.25rem;display:flex;align-items:center;gap:0.4rem;">
+        <i class="fas fa-microchip" style="font-size:0.65rem;"></i> AI Engine
+      </div>
+
+      <!-- Main AI Card -->
+      <a href="{{ url_for('ai_companion') }}" style="display:block;text-decoration:none;margin-bottom:0.35rem;">
+        <div style="
+            background: {% if request.endpoint in ['ai_companion','ai_predict','ai_results'] %}
+              linear-gradient(135deg,#1e1b4b,#312e81,#3730a3)
+            {% else %}
+              linear-gradient(135deg,#1e3a8a,#1d4ed8,#3b82f6)
+            {% endif %};
+            border-radius:14px;padding:0.9rem 1rem;
+            box-shadow:0 4px 15px rgba(59,130,246,0.35);
+            border:1px solid rgba(255,255,255,0.15);
+            position:relative;overflow:hidden;
+            transition:all 0.25s;">
+
+          <!-- Glow effect -->
+          <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;
+                        border-radius:50%;background:rgba(147,197,253,0.15);pointer-events:none;"></div>
+
+          <!-- Header row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <!-- Animated brain icon -->
+              <div style="width:28px;height:28px;background:rgba(255,255,255,0.18);
+                            border-radius:8px;display:flex;align-items:center;
+                            justify-content:center;animation:aiPulse 2.5s ease-in-out infinite;">
+                <i class="fas fa-brain" style="color:#bfdbfe;font-size:0.85rem;"></i>
+              </div>
+              <span style="color:white;font-size:0.88rem;font-weight:700;">AI Predictive System</span>
+            </div>
+            <!-- Live badge -->
+            <span style="background:rgba(16,185,129,0.25);border:1px solid rgba(16,185,129,0.4);
+                           color:#6ee7b7;font-size:0.62rem;font-weight:700;padding:0.15rem 0.5rem;
+                           border-radius:20px;display:flex;align-items:center;gap:0.3rem;">
+              <span style="width:5px;height:5px;background:#10b981;border-radius:50%;
+                             animation:liveDot 1.5s ease-in-out infinite;display:inline-block;"></span>
+              LIVE
+            </span>
+          </div>
+
+          <!-- Subtitle -->
+          <div style="color:rgba(255,255,255,0.68);font-size:0.72rem;line-height:1.4;margin-bottom:0.65rem;">
+            Multimodal Disease Prediction<br>
+            <span style="color:rgba(255,255,255,0.45);">Image · Text · Vitals · Labs</span>
+          </div>
+
+          <!-- AWS service pills -->
+          <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+            <span style="background:rgba(255,255,255,0.12);color:#bfdbfe;font-size:0.6rem;
+                           font-weight:600;padding:0.15rem 0.45rem;border-radius:6px;
+                           border:1px solid rgba(255,255,255,0.1);">Rekognition</span>
+            <span style="background:rgba(255,255,255,0.12);color:#bfdbfe;font-size:0.6rem;
+                           font-weight:600;padding:0.15rem 0.45rem;border-radius:6px;
+                           border:1px solid rgba(255,255,255,0.1);">Bedrock</span>
+            <span style="background:rgba(255,255,255,0.12);color:#bfdbfe;font-size:0.6rem;
+                           font-weight:600;padding:0.15rem 0.45rem;border-radius:6px;
+                           border:1px solid rgba(255,255,255,0.1);">Comprehend</span>
+            <span style="background:rgba(255,255,255,0.12);color:#bfdbfe;font-size:0.6rem;
+                           font-weight:600;padding:0.15rem 0.45rem;border-radius:6px;
+                           border:1px solid rgba(255,255,255,0.1);">SNS</span>
+          </div>
+
+          <!-- Arrow indicator -->
+          <div style="position:absolute;bottom:0.75rem;right:0.85rem;
+                        color:rgba(255,255,255,0.3);font-size:0.75rem;">
+            <i class="fas fa-arrow-right"></i>
+          </div>
+        </div>
+      </a>
+
+      <!-- Sub-link: AI Results (if prediction exists) -->
+      <a href="{{ url_for('patient_assistant') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;border-radius:10px;
+                  font-size:0.83rem;font-weight:500;color:#6d28d9;text-decoration:none;transition:all 0.18s;
+                  background:{% if request.endpoint=='patient_assistant' %}#ede9fe{% else %}rgba(237,233,254,0.5){% endif %};">
+        <i class="fas fa-robot" style="width:16px;text-align:center;font-size:0.8rem;"></i>
+        AI Chat Assistant
+      </a>
+
+      <!-- ── Emergency ──────────────────────────── -->
+      <div style="margin-top:0.75rem;">
+        <button onclick="toggleEmergency()" class="btn" style="width:100%;display:flex;align-items:center;gap:0.6rem;padding:0.65rem 0.75rem;
+                   border-radius:10px;font-size:0.88rem;font-weight:600;cursor:pointer;
+                   background:#fef2f2;color:#ef4444;border:1.5px solid #fecaca;
+                   animation:emergencyPulse 2.5s infinite;transition:all 0.18s;text-align:left;">
+          <i class="fas fa-ambulance" style="width:16px;text-align:center;"></i> SOS / Emergency
+        </button>
+      </div>
+
+      {% elif current_role == 'doctor' %}
+
+      <!-- ── Doctor Navigation ──────────────────── -->
+      <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+                    color:#9ca3af;margin:0.9rem 0 0.4rem 0.25rem;">Doctor Tools</div>
+
+      <a href="{{ url_for('doctor_dashboard') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;transition:all 0.18s;
+                  {% if request.endpoint=='doctor_dashboard' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-stethoscope" style="width:16px;text-align:center;opacity:0.7;"></i> Dashboard
+      </a>
+      <a href="{{ url_for('doctor_chat_view') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                  font-size:0.88rem;font-weight:500;color:#374151;text-decoration:none;transition:all 0.18s;
+                  {% if request.endpoint=='doctor_chat_view' %}background:#eff6ff;color:#1e40af;font-weight:600;{% endif %}">
+        <i class="fas fa-comments" style="width:16px;text-align:center;opacity:0.7;"></i> Comm Center
+      </a>
+
+      <!-- ── AI COMMAND CENTER for Doctors ─────── -->
+      <div style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;
+                    color:#7c3aed;margin:1rem 0 0.5rem 0.25rem;display:flex;align-items:center;gap:0.4rem;">
+        <i class="fas fa-microchip" style="font-size:0.65rem;"></i> AI Command Center
+      </div>
+
+      <a href="{{ url_for('doctor_ai_alerts') }}" style="display:block;text-decoration:none;margin-bottom:0.35rem;">
+        <div style="
+            background: {% if request.endpoint == 'doctor_ai_alerts' %}
+              linear-gradient(135deg,#3b0764,#6d28d9,#7c3aed)
+            {% else %}
+              linear-gradient(135deg,#4c1d95,#6d28d9,#8b5cf6)
+            {% endif %};
+            border-radius:14px;padding:0.9rem 1rem;
+            box-shadow:0 4px 15px rgba(124,58,237,0.35);
+            border:1px solid rgba(255,255,255,0.12);
+            position:relative;overflow:hidden;transition:all 0.25s;">
+
+          <!-- Glow -->
+          <div style="position:absolute;top:-15px;right:-15px;width:70px;height:70px;
+                        border-radius:50%;background:rgba(196,181,253,0.15);pointer-events:none;"></div>
+
+          <!-- Header -->
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <div style="width:28px;height:28px;background:rgba(255,255,255,0.15);border-radius:8px;
+                            display:flex;align-items:center;justify-content:center;
+                            animation:aiPulse 2.5s ease-in-out infinite;">
+                <i class="fas fa-brain" style="color:#e9d5ff;font-size:0.85rem;"></i>
+              </div>
+              <span style="color:white;font-size:0.88rem;font-weight:700;">AI Alert Monitor</span>
+            </div>
+            <!-- Alert count badge -->
+            <span style="background:rgba(239,68,68,0.3);border:1px solid rgba(239,68,68,0.5);
+                           color:#fca5a5;font-size:0.65rem;font-weight:700;
+                           padding:0.15rem 0.5rem;border-radius:20px;animation:liveDot 1.5s ease-in-out infinite;">
+              <i class="fas fa-bell"></i> LIVE
+            </span>
+          </div>
+
+          <!-- Sub-text -->
+          <div style="color:rgba(255,255,255,0.65);font-size:0.72rem;line-height:1.4;margin-bottom:0.6rem;">
+            High &amp; Critical Case Dashboard<br>
+            <span style="color:rgba(255,255,255,0.4);">DynamoDB · SNS · Bedrock</span>
+          </div>
+
+          <!-- Pills -->
+          <div style="display:flex;flex-wrap:wrap;gap:0.3rem;">
+            <span style="background:rgba(239,68,68,0.2);color:#fca5a5;font-size:0.6rem;
+                           font-weight:600;padding:0.15rem 0.45rem;border-radius:6px;
+                           border:1px solid rgba(239,68,68,0.3);">
+              <i class="fas fa-exclamation-circle"></i> Critical
+            </span>
+            <span style="background:rgba(234,88,12,0.2);color:#fdba74;font-size:0.6rem;
+                           font-weight:600;padding:0.15rem 0.45rem;border-radius:6px;
+                           border:1px solid rgba(234,88,12,0.3);">
+              <i class="fas fa-exclamation-triangle"></i> High
+            </span>
+            <span style="background:rgba(255,255,255,0.1);color:#e9d5ff;font-size:0.6rem;
+                           font-weight:600;padding:0.15rem 0.45rem;border-radius:6px;
+                           border:1px solid rgba(255,255,255,0.1);">Real-time</span>
+          </div>
+
+          <div style="position:absolute;bottom:0.75rem;right:0.85rem;
+                        color:rgba(255,255,255,0.3);font-size:0.75rem;">
+            <i class="fas fa-arrow-right"></i>
+          </div>
+        </div>
+      </a>
+
+      {% endif %}
+
+      <!-- ── Divider + Logout ───────────────────── -->
+      <div style="margin-top:auto;padding-top:1rem;border-top:1px solid rgba(0,0,0,0.07);">
+        <a href="{{ url_for('logout') }}" class="btn" style="display:flex;align-items:center;gap:0.6rem;padding:0.6rem 0.75rem;border-radius:10px;
+                    font-size:0.88rem;font-weight:500;color:#6b7280;text-decoration:none;transition:all 0.18s;"
+          onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444';"
+          onmouseout="this.style.background='transparent';this.style.color='#6b7280';">
+          <i class="fas fa-sign-out-alt" style="width:16px;text-align:center;opacity:0.7;"></i> Logout
+        </a>
+      </div>
+
+    </nav>
+
+    <!-- Animations -->
+    <style>
+      @keyframes aiPulse {
+
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        50% {
+          transform: scale(1.08);
+          opacity: 0.85;
+        }
+      }
+
+      @keyframes liveDot {
+
+        0%,
+        100% {
+          opacity: 1;
+        }
+
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      @keyframes emergencyPulse {
+        0% {
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.35);
+        }
+
+        70% {
+          box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+        }
+
+        100% {
+          box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+      }
+
+      .sidebar a.btn:hover,
+      .sidebar a[style]:hover {
+        filter: brightness(1.05);
+      }
+
+      .sidebar::-webkit-scrollbar {
+        width: 4px;
+      }
+
+      .sidebar::-webkit-scrollbar-track {
+        background: transparent;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.12);
+        border-radius: 4px;
+      }
+    </style>
+  </aside>
+
+
+  <!-- Main Content -->
+  <main class="main-content">
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-container" style="margin-bottom: 1rem;">
+      {% for category, message in messages %}
+      <div class="glass-card flash-message"
+        style="background: white; border-left: 4px solid var(--secondary); padding: 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: space-between;">
+        <span>{{ message }}</span>
+        <i class="fas fa-times" onclick="this.parentElement.remove()" style="cursor: pointer;"></i>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
   </div>
 
   <!-- Emergency Modal -->
