@@ -176,6 +176,16 @@
         AI Chat Assistant
       </a>
 
+      <a href="{{ url_for('report_analysis') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;border-radius:10px;
+                  font-size:0.83rem;font-weight:500;color:#0f766e;text-decoration:none;transition:all 0.18s;
+                  background:{% if request.endpoint in ['report_analysis','report_analysis_results'] %}#ccfbf1{% else %}rgba(204,251,241,0.5){% endif %};">
+        <i class="fas fa-file-medical-alt" style="width:16px;text-align:center;font-size:0.8rem;"></i>
+        Report Analysis
+        <span style="margin-left:auto;background:#0f766e;color:#fff;font-size:.6rem;font-weight:700;
+                     padding:.1rem .45rem;border-radius:6px;letter-spacing:.03em;">NEW</span>
+      </a>
+
       <!-- ── Emergency ──────────────────────────── -->
       <div style="margin-top:0.75rem;">
         <button onclick="toggleEmergency()" class="btn" style="width:100%;display:flex;align-items:center;gap:0.6rem;padding:0.65rem 0.75rem;
@@ -273,6 +283,16 @@
             <i class="fas fa-arrow-right"></i>
           </div>
         </div>
+      </a>
+
+      <a href="{{ url_for('report_analysis') }}" class="btn"
+        style="display:flex;align-items:center;gap:0.6rem;padding:0.5rem 0.75rem;border-radius:10px;
+                  font-size:0.83rem;font-weight:500;color:#0f766e;text-decoration:none;transition:all 0.18s;
+                  background:{% if request.endpoint in ['report_analysis','report_analysis_results'] %}#ccfbf1{% else %}rgba(204,251,241,0.5){% endif %};">
+        <i class="fas fa-file-medical-alt" style="width:16px;text-align:center;font-size:0.8rem;"></i>
+        Report Analysis
+        <span style="margin-left:auto;background:#0f766e;color:#fff;font-size:.6rem;font-weight:700;
+                     padding:.1rem .45rem;border-radius:6px;">NEW</span>
       </a>
 
       {% endif %}

@@ -1,6 +1,6 @@
 """
-AI Health Companion - Multimodal Predictive Engine
-Integrates: S3, Rekognition, Comprehend Medical, Bedrock, DynamoDB, SNS
+AI Health Companion - Multimodal Predictive Engine (Report Analysis Edition)
+Integrates: S3, Rekognition, Comprehend Medical, Textract, Bedrock, DynamoDB, SNS
 """
 
 import os
@@ -60,6 +60,272 @@ def upload_image_to_s3(file_obj, patient_id, filename):
     except Exception as e:
         logger.error(f"❌ S3 upload failed: {e}")
         return None
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 1b. S3 – Upload a lab/report file (PDF, JPEG, PNG)
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+def upload_report_to_s3(file_obj, patient_id, filename):
+    """Upload a report file to S3 under reports/ prefix. Returns S3 key or None."""
+    s3 = _get_client('s3')
+    key = f"reports/{patient_id}/{filename}"
+    if not s3:
+        logger.info("[SIMULATION] S3 report upload skipped")
+        return f"simulated/reports/{patient_id}/{filename}"
+    try:
+        s3.upload_fileobj(file_obj, S3_BUCKET, key,
+                          ExtraArgs={'ServerSideEncryption': 'AES256'})
+        logger.info(f"✅ S3 report upload: s3://{S3_BUCKET}/{key}")
+        return key
+    except Exception as e:
+        logger.error(f"❌ S3 report upload failed: {e}")
+        return None
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 2b. Amazon Textract – Extract text from lab reports / PDFs
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEXTRACT_SIMULATION_REPORTS = {
+    'blood': (
+        "COMPLETE BLOOD COUNT REPORT\n"
+        "WBC: 11.2 K/uL [HIGH]  RBC: 4.1 M/uL  Hemoglobin: 12.1 g/dL [LOW]\n"
+        "Hematocrit: 37.2%  MCV: 80 fL  MCH: 28 pg  MCHC: 33 g/dL\n"
+        "Platelets: 420 K/uL [HIGH]  Neutrophils: 74%  Lymphocytes: 18% [LOW]\n"
+        "Interpretation: Leukocytosis with relative lymphopenia. "
+        "Elevated platelets. Mild normocytic anemia. Consistent with bacterial infection or inflammatory process."
+    ),
+    'lipid': (
+        "LIPID PANEL REPORT\n"
+        "Total Cholesterol: 238 mg/dL [BORDERLINE HIGH]  LDL: 162 mg/dL [HIGH]\n"
+        "HDL: 38 mg/dL [LOW]  Triglycerides: 190 mg/dL [BORDERLINE HIGH]\n"
+        "VLDL: 38 mg/dL  LDL/HDL Ratio: 4.26 [HIGH RISK]\n"
+        "Interpretation: Dyslipidemia with elevated LDL and low HDL. "
+        "Cardiovascular risk elevated. Recommend dietary modification and statin therapy review."
+    ),
+    'thyroid': (
+        "THYROID FUNCTION TESTS\n"
+        "TSH: 0.18 mIU/L [LOW]  Free T4: 2.1 ng/dL [HIGH]  Free T3: 4.9 pg/mL\n"
+        "Anti-TPO Antibodies: 142 IU/mL [POSITIVE]\n"
+        "Interpretation: Suppressed TSH with elevated T4 indicates hyperthyroidism. "
+        "Positive anti-TPO antibodies suggestive of Graves disease or autoimmune thyroiditis."
+    ),
+    'default': (
+        "LABORATORY REPORT\n"
+        "Glucose Fasting: 126 mg/dL [HIGH]  HbA1c: 7.2% [DIABETIC RANGE]\n"
+        "Creatinine: 1.3 mg/dL [HIGH NORMAL]  eGFR: 68 mL/min/1.73m²\n"
+        "Uric Acid: 8.1 mg/dL [HIGH]  ALT: 52 U/L [MILDLY ELEVATED]\n"
+        "AST: 38 U/L  Albumin: 3.8 g/dL  Total Protein: 6.9 g/dL\n"
+        "Interpretation: Elevated fasting glucose and HbA1c confirm diabetes mellitus. "
+        "Mild renal impairment. Hyperuricemia noted. Liver enzymes mildly elevated."
+    )
+}
+
+
+def classify_report_type(filename, text_hint=''):
+    """Heuristically classify a report file into a known category."""
+    combined = (filename + ' ' + text_hint).lower()
+    if any(w in combined for w in ['blood', 'cbc', 'wbc', 'rbc', 'hemo', 'hemoglobin', 'platelet']):
+        return 'blood'
+    if any(w in combined for w in ['lipid', 'cholesterol', 'ldl', 'hdl', 'triglyceride']):
+        return 'lipid'
+    if any(w in combined for w in ['thyroid', 'tsh', 't3', 't4', 'thyroxine']):
+        return 'thyroid'
+    if any(w in combined for w in ['xray', 'x-ray', 'ct', 'scan', 'mri', 'xr']):
+        return 'imaging'
+    return 'default'
+
+
+def analyze_report_with_textract(s3_key, filename='report.pdf'):
+    """
+    Use Amazon Textract to extract text from a medical report stored in S3.
+    Falls back to realistic simulation when Textract is unavailable.
+    Returns a structured dict with raw_text, lines, and a summary.
+    """
+    textract = _get_client('textract')
+    report_type = classify_report_type(filename)
+
+    if not textract or s3_key.startswith('simulated/'):
+        sim_text = TEXTRACT_SIMULATION_REPORTS.get(report_type,
+                                                    TEXTRACT_SIMULATION_REPORTS['default'])
+        logger.info("[SIMULATION] Textract extraction simulated")
+        return {
+            'raw_text': sim_text,
+            'lines': sim_text.split('\n'),
+            'report_type': report_type,
+            'word_count': len(sim_text.split()),
+            'summary': sim_text[:280] + '…' if len(sim_text) > 280 else sim_text,
+            'simulated': True
+        }
+
+    try:
+        response = textract.detect_document_text(
+            Document={'S3Object': {'Bucket': S3_BUCKET, 'Name': s3_key}}
+        )
+        blocks = response.get('Blocks', [])
+        lines = [b['Text'] for b in blocks if b['BlockType'] == 'LINE']
+        raw_text = '\n'.join(lines)
+        logger.info(f"✅ Textract extracted {len(lines)} lines from {s3_key}")
+        return {
+            'raw_text': raw_text,
+            'lines': lines,
+            'report_type': classify_report_type(filename, raw_text[:500]),
+            'word_count': len(raw_text.split()),
+            'summary': raw_text[:280] + '…' if len(raw_text) > 280 else raw_text,
+            'simulated': False
+        }
+    except Exception as e:
+        logger.error(f"❌ Textract error: {e}")
+        sim_text = TEXTRACT_SIMULATION_REPORTS.get(report_type,
+                                                    TEXTRACT_SIMULATION_REPORTS['default'])
+        return {
+            'raw_text': sim_text,
+            'lines': sim_text.split('\n'),
+            'report_type': report_type,
+            'word_count': len(sim_text.split()),
+            'summary': sim_text[:280] + '…',
+            'simulated': True
+        }
+
+
+def extract_report_insights(textract_result, text_entities):
+    """
+    Cross-reference Textract output with Comprehend Medical entities
+    to produce structured report insights.
+    """
+    raw = textract_result.get('raw_text', '')
+    report_type = textract_result.get('report_type', 'default')
+    lines = textract_result.get('lines', [])
+
+    # Pick out abnormal markers by keywords
+    abnormal_markers = []
+    for line in lines:
+        upper = line.upper()
+        if any(tag in upper for tag in ['HIGH', 'LOW', 'ELEVATED', 'CRITICAL',
+                                         'ABNORMAL', 'POSITIVE', 'REACTIVE',
+                                         'OUT OF RANGE', 'H]', 'L]']):
+            abnormal_markers.append(line.strip())
+
+    entities = text_entities.get('entities', [])
+    conditions_found = [e['Text'] for e in entities
+                        if e.get('Category') in ('MEDICAL_CONDITION', 'DX_NAME')][:6]
+    medications_found = [e['Text'] for e in entities
+                         if e.get('Category') == 'MEDICATION'][:4]
+
+    type_labels = {
+        'blood':   'Complete Blood Count (CBC)',
+        'lipid':   'Lipid / Cardiovascular Panel',
+        'thyroid': 'Thyroid Function Tests',
+        'imaging': 'Medical Imaging Report',
+        'default': 'General Laboratory Report'
+    }
+
+    return {
+        'report_label':     type_labels.get(report_type, 'Laboratory Report'),
+        'report_type':      report_type,
+        'abnormal_markers': abnormal_markers[:8],
+        'conditions_found': conditions_found,
+        'medications_found': medications_found,
+        'total_lines':      len(lines),
+        'word_count':       textract_result.get('word_count', 0),
+        'key_excerpt':      '\n'.join(lines[:6]) if lines else raw[:300],
+        'full_text':        raw
+    }
+
+
+def analyze_multiple_reports(report_files, patient_id):
+    """
+    Process a list of report files (werkzeug FileStorage objects).
+    Returns a list of per-report analysis dicts.
+    """
+    results = []
+    for f in (report_files or []):
+        if not f or getattr(f, 'filename', '') == '':
+            continue
+        safe_name = f.filename.replace(' ', '_')
+        s3_key = upload_report_to_s3(f.stream, patient_id, safe_name)
+        textract_result = analyze_report_with_textract(s3_key or '', safe_name)
+        symptom_text = textract_result.get('raw_text', '')
+        text_entities = extract_medical_entities(symptom_text[:5000])
+        insights = extract_report_insights(textract_result, text_entities)
+        results.append({
+            'filename':   safe_name,
+            's3_key':     s3_key,
+            'textract':   textract_result,
+            'entities':   text_entities,
+            'insights':   insights,
+        })
+    return results
+
+
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Master Pipeline – Report Analysis Mode
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+def run_report_analysis_pipeline(patient_data, report_files):
+    """
+    Dedicated pipeline for multimodal REPORT analysis:
+    1. Upload each report to S3
+    2. Extract text with Textract
+    3. Identify medical entities (Comprehend Medical)
+    4. Synthesize insights
+    5. Generate final prediction via Bedrock using extracted text
+    6. Persist to DynamoDB & trigger SNS if needed
+    Returns: full analysis dict
+    """
+    pid = patient_data.get('patient_id', str(uuid.uuid4())[:8])
+    report_analyses = analyze_multiple_reports(report_files, pid)
+
+    # Combine all extracted text for Bedrock context
+    combined_text = '\n\n'.join(
+        r['textract'].get('raw_text', '') for r in report_analyses
+    ) or patient_data.get('symptoms', '')
+
+    # Enrich patient_data symptoms with report text
+    enriched_data = dict(patient_data)
+    if combined_text:
+        existing = enriched_data.get('symptoms', '')
+        enriched_data['symptoms'] = (
+            existing + '\n\n[EXTRACTED FROM REPORTS]\n' + combined_text[:8000]
+            if existing else combined_text[:8000]
+        )
+
+    # Extract medical entities from the full combined text
+    text_findings = extract_medical_entities(combined_text[:20000])
+
+    # Aggregate abnormal markers across all reports
+    all_abnormal = []
+    for r in report_analyses:
+        all_abnormal.extend(r['insights'].get('abnormal_markers', []))
+
+    # Image finding stub (no imaging in this mode)
+    image_findings = {
+        'summary': (
+            f"Multimodal Report Analysis: {len(report_analyses)} report(s) uploaded. "
+            f"{len(all_abnormal)} abnormal marker(s) detected across reports."
+        ),
+        'simulated': any(r['textract'].get('simulated') for r in report_analyses)
+    }
+
+    # Generate Bedrock prediction
+    prediction = generate_prediction_with_bedrock(enriched_data, image_findings, text_findings)
+
+    # Embed report analysis results into prediction
+    prediction['report_analyses'] = report_analyses
+    prediction['report_abnormal_markers'] = all_abnormal[:10]
+    prediction['report_count'] = len(report_analyses)
+    prediction['pipeline_mode'] = 'report_analysis'
+
+    # Confidence warning
+    try:
+        conf_val = float(prediction.get('confidence_score', '0%').replace('%', ''))
+        prediction['low_confidence_warning'] = conf_val < 75
+    except Exception:
+        prediction['low_confidence_warning'] = False
+
+    # Persist & alert
+    save_prediction_to_dynamodb(prediction)
+    send_sns_alert(prediction)
+
+    return prediction
 
 
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -533,15 +799,16 @@ AI recommendations are assistive only – doctor has final say.
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 # 7. Master Pipeline Orchestrator
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-def run_ai_pipeline(patient_data, image_file=None):
+def run_ai_pipeline(patient_data, image_file=None, report_files=None):
     """
     Full AI pipeline:
-    1. Upload image to S3
+    1. Upload image to S3 (if provided)
     2. Analyse image with Rekognition
-    3. Extract medical entities from symptoms text (Comprehend Medical)
-    4. Generate prediction with Bedrock
-    5. Save results to DynamoDB
-    6. Trigger SNS if High/Critical
+    3. Upload & analyse report files with Textract (if provided)
+    4. Extract medical entities from symptoms text (Comprehend Medical)
+    5. Generate prediction with Bedrock
+    6. Save results to DynamoDB
+    7. Trigger SNS if High/Critical
     Returns: prediction dict
     """
     pid = patient_data.get('patient_id', str(uuid.uuid4())[:8])
@@ -555,9 +822,28 @@ def run_ai_pipeline(patient_data, image_file=None):
         if s3_key:
             image_findings = analyze_image_with_rekognition(s3_key)
 
+    # Step 2b – Report files (Textract)
+    report_analyses = []
+    if report_files:
+        actual_reports = [f for f in (report_files if isinstance(report_files, list) else [report_files])
+                          if f and getattr(f, 'filename', '') != '']
+        if actual_reports:
+            report_analyses = analyze_multiple_reports(actual_reports, pid)
+            # Inject extracted report text into symptoms for better Bedrock context
+            combined_report_text = '\n\n'.join(
+                r['textract'].get('raw_text', '') for r in report_analyses
+            )
+            if combined_report_text:
+                existing_symptoms = patient_data.get('symptoms', '')
+                patient_data = dict(patient_data)
+                patient_data['symptoms'] = (
+                    existing_symptoms + '\n\n[REPORT EXTRACTS]\n' + combined_report_text[:6000]
+                    if existing_symptoms else combined_report_text[:6000]
+                )
+
     # Step 3 – Text
     symptoms_text = patient_data.get('symptoms', '')
-    text_findings = extract_medical_entities(symptoms_text)
+    text_findings = extract_medical_entities(symptoms_text[:20000])
 
     # Step 4 – Bedrock Prediction
     prediction = generate_prediction_with_bedrock(patient_data, image_findings, text_findings)
@@ -565,6 +851,15 @@ def run_ai_pipeline(patient_data, image_file=None):
     # Attach S3 key for reference
     if s3_key:
         prediction['s3_image_key'] = s3_key
+
+    # Attach report analysis results
+    if report_analyses:
+        prediction['report_analyses'] = report_analyses
+        prediction['report_count'] = len(report_analyses)
+        all_abnormal = []
+        for r in report_analyses:
+            all_abnormal.extend(r['insights'].get('abnormal_markers', []))
+        prediction['report_abnormal_markers'] = all_abnormal[:10]
 
     # Attach low-confidence warning flag
     try:

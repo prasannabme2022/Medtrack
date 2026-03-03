@@ -628,6 +628,75 @@
         </div>
     </div>
 
+    <!-- Lab Report Analysis (shown when reports were uploaded) -->
+    {% if prediction.report_analyses %}
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon" style="background:#ccfbf1;color:#0f766e;"><i class="fas fa-file-medical-alt"></i>
+            </div>
+            <h2 class="card-title">Lab Report Analysis &nbsp;<span
+                    style="font-size:.78rem;background:#ccfbf1;color:#0f766e;border-radius:12px;padding:.2rem .6rem;font-weight:700;">{{
+                    prediction.report_count }} file(s)</span></h2>
+        </div>
+
+        {% if prediction.report_abnormal_markers %}
+        <div style="margin-bottom:1.25rem;">
+            <div
+                style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#dc2626;margin-bottom:.6rem;">
+                <i class="fas fa-exclamation-triangle"></i> Abnormal Markers Detected
+            </div>
+            {% for marker in prediction.report_abnormal_markers %}
+            <div style="display:flex;align-items:flex-start;gap:.5rem;background:#fef2f2;border:1px solid #fecaca;
+                        border-radius:8px;padding:.6rem .9rem;margin-bottom:.5rem;font-size:.82rem;
+                        color:#7f1d1d;font-family:monospace;">
+                <i class="fas fa-arrow-right" style="color:#dc2626;margin-top:.1rem;flex-shrink:0;"></i>
+                {{ marker }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% for ra in prediction.report_analyses %}
+        {% set ins = ra.insights %}
+        <div style="border:1.5px solid #e5e7eb;border-radius:12px;margin-bottom:.85rem;overflow:hidden;">
+            <div style="display:flex;align-items:center;gap:.6rem;padding:.85rem 1.1rem;
+                        background:#f9fafb;cursor:pointer;" onclick="toggleRA('ra{{ loop.index }}')">
+                <i class="fas fa-file-alt" style="color:#0f766e;"></i>
+                <div style="flex:1;">
+                    <div style="font-weight:700;color:#1f2937;font-size:.9rem;">{{ ra.filename }}</div>
+                    <div style="font-size:.75rem;color:#9ca3af;margin-top:.1rem;">{{ ins.total_lines }} lines · {{
+                        ins.word_count }} words</div>
+                </div>
+                <span style="background:#ccfbf1;color:#0f766e;font-size:.72rem;font-weight:700;
+                             padding:.2rem .65rem;border-radius:12px;">
+                    {{ ins.report_label }}
+                </span>
+                <i class="fas fa-chevron-down" style="color:#9ca3af;"></i>
+            </div>
+            <div id="ra{{ loop.index }}" style="display:none;padding:1rem 1.1rem;border-top:1px solid #e5e7eb;">
+                {% if ins.conditions_found %}
+                <div style="margin-bottom:.75rem;">
+                    <div
+                        style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6b7280;margin-bottom:.4rem;">
+                        Conditions Identified</div>
+                    {% for c in ins.conditions_found %}
+                    <span class="factor-pill"><i class="fas fa-stethoscope"></i>{{ c }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div
+                    style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6b7280;margin-bottom:.4rem;">
+                    Extracted Text</div>
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;
+                            padding:.85rem;font-family:monospace;font-size:.78rem;color:#334155;
+                            white-space:pre-wrap;max-height:220px;overflow-y:auto;line-height:1.5;">
+                    {{ ra.textract.raw_text }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <!-- Differential Diagnoses + Explainability -->
     <div class="two-col">
 
@@ -703,6 +772,11 @@
         const bar = document.getElementById('confBar');
         if (bar) bar.style.width = val + '%';
     }, 300);
-  });
+    });
+
+    function toggleRA(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
+    }
 </script>
 {% endblock %}

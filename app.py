@@ -719,9 +719,11 @@ def ai_predict():
     }
 
     image_file = request.files.get('medical_image')
+    report_files = request.files.getlist('lab_reports')
 
     try:
-        prediction = ai_engine.run_ai_pipeline(patient_data, image_file)
+        prediction = ai_engine.run_ai_pipeline(patient_data, image_file,
+                                               report_files=report_files if report_files else None)
         # Store in session for results page
         session['ai_prediction'] = prediction
         return redirect(url_for('ai_results'))
@@ -740,6 +742,56 @@ def ai_results():
         flash('No prediction data found. Please submit the AI form first.', 'error')
         return redirect(url_for('ai_companion'))
     return render_template('ai_results.html', prediction=prediction)
+
+
+@app.route('/report_analysis', methods=['GET', 'POST'])
+@login_required
+def report_analysis():
+    """
+    Dedicated multimodal report analysis page (patients & doctors).
+    Accepts up to 5 lab report files (PDF, PNG, JPG) and runs the
+    Textract + Comprehend Medical + Bedrock pipeline.
+    """
+    if request.method == 'POST':
+        patient_data = {
+            'patient_id':   session.get('user_id', 'UNKNOWN'),
+            'patient_name': session.get('user_name', 'Patient'),
+            'age':          request.form.get('age', ''),
+            'gender':       request.form.get('gender', ''),
+            'symptoms':     request.form.get('context_notes', ''),
+            'bp':           request.form.get('bp', ''),
+            'spo2':         request.form.get('spo2', ''),
+            'hba1c':        request.form.get('hba1c', ''),
+            'wbc':          '',
+            'cholesterol':  '',
+            'doctor_notes': request.form.get('doctor_notes', ''),
+        }
+        report_files = request.files.getlist('report_files')
+
+        if not any(f.filename for f in report_files):
+            flash('Please upload at least one report file (PDF, PNG, JPG).', 'error')
+            return redirect(url_for('report_analysis'))
+
+        try:
+            result = ai_engine.run_report_analysis_pipeline(patient_data, report_files)
+            session['report_analysis_result'] = result
+            return redirect(url_for('report_analysis_results'))
+        except Exception as e:
+            flash(f'Report analysis error: {str(e)}', 'error')
+            return redirect(url_for('report_analysis'))
+
+    return render_template('report_analysis.html')
+
+
+@app.route('/report_analysis_results')
+@login_required
+def report_analysis_results():
+    """Display multimodal report analysis results."""
+    result = session.get('report_analysis_result')
+    if not result:
+        flash('No report analysis found. Please upload reports first.', 'error')
+        return redirect(url_for('report_analysis'))
+    return render_template('report_analysis_results.html', prediction=result)
 
 
 @app.route('/doctor_ai_alerts')

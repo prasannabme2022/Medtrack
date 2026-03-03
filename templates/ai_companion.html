@@ -421,6 +421,41 @@
             </div>
         </div>
 
+        <!-- Lab Reports Upload (NEW) -->
+        <div class="form-section">
+            <div class="section-header">
+                <div class="section-icon" style="background:#ccfbf1;color:#0f766e;">
+                    <i class="fas fa-file-medical-alt"></i>
+                </div>
+                <h2 class="section-title">Lab Reports / Blood Panels <span
+                        style="font-weight:400;color:#6b7280;">(Optional – PDF or Image)</span></h2>
+            </div>
+            <div class="upload-area" id="labReportArea" style="border-color:#5eead4;background:#f0fdfa;">
+                <input type="file" name="lab_reports" id="labReports" accept=".pdf,.jpg,.jpeg,.png" multiple
+                    onchange="showLabFiles(this)">
+                <div class="upload-icon" style="color:#14b8a6;"><i class="fas fa-file-medical-alt"></i></div>
+                <div class="upload-label" style="color:#0f766e;">Click or drag to upload lab reports</div>
+                <div class="upload-hint">Blood panel, lipid panel, thyroid test, prescriptions — PDF, PNG, JPG (up to 3
+                    files)</div>
+                <div id="lab-file-display"
+                    style="margin-top:.75rem;font-size:.85rem;color:#059669;font-weight:500;display:none;">
+                    <i class="fas fa-check-circle"></i> <span id="labFnames"></span>
+                </div>
+            </div>
+            <div class="info-tip" style="margin-top:0.8rem;background:#f0fdfa;border-color:#5eead4;color:#065f46;">
+                <i class="fas fa-magic" style="flex-shrink:0;margin-top:0.1rem;color:#0f766e;"></i>
+                <span>Reports are processed with <strong>Amazon Textract OCR</strong> to extract structured lab data,
+                    then analysed by <strong>Comprehend Medical</strong> to identify clinical entities. This enriches
+                    your Bedrock AI prediction with real report data.</span>
+            </div>
+            <div style="margin-top:.85rem;font-size:.82rem;color:#6b7280;text-align:center;">
+                — or —&nbsp;&nbsp;
+                <a href="{{ url_for('report_analysis') }}" style="color:#0f766e;font-weight:600;">
+                    <i class="fas fa-external-link-alt"></i> Use the dedicated Report Analysis tool</a>
+                &nbsp;for report-only analysis with more detail
+            </div>
+        </div>
+
         <!-- Vitals -->
         <div class="form-section">
             <div class="section-header">
@@ -506,6 +541,16 @@
         const fname = document.getElementById('fname');
         if (input.files && input.files[0]) {
             fname.textContent = input.files[0].name;
+            display.style.display = 'block';
+        }
+    }
+
+    function showLabFiles(input) {
+        const display = document.getElementById('lab-file-display');
+        const fnames = document.getElementById('labFnames');
+        if (input.files && input.files.length > 0) {
+            const names = Array.from(input.files).map(f => f.name).join(', ');
+            fnames.textContent = `${input.files.length} file(s): ${names}`;
             display.style.display = 'block';
         }
     }

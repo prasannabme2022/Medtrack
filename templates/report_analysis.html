@@ -1,0 +1,719 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    :root {
+        --ra-primary: #0f766e;
+        --ra-accent: #14b8a6;
+        --ra-glow: rgba(20, 184, 166, 0.18);
+        --ra-bg: #f0fdfa;
+    }
+
+    .ra-hero {
+        background: linear-gradient(135deg, #042f2e 0%, #0f766e 55%, #14b8a6 100%);
+        border-radius: 20px;
+        padding: 2.5rem 2rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .ra-hero::before {
+        content: '';
+        position: absolute;
+        width: 320px;
+        height: 320px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(153, 246, 228, .13) 0%, transparent 70%);
+        top: -90px;
+        right: -70px;
+    }
+
+    .ra-hero::after {
+        content: '';
+        position: absolute;
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(153, 246, 228, .08) 0%, transparent 70%);
+        bottom: -40px;
+        left: 10%;
+    }
+
+    .ra-hero-title {
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: #fff;
+        margin: 0 0 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: .75rem;
+    }
+
+    .ra-hero-subtitle {
+        color: rgba(255, 255, 255, .73);
+        font-size: .95rem;
+        margin: 0;
+        max-width: 640px;
+        line-height: 1.6;
+    }
+
+    .ra-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: rgba(255, 255, 255, .13);
+        border: 1px solid rgba(255, 255, 255, .22);
+        color: #ccfbf1;
+        font-size: .78rem;
+        font-weight: 600;
+        padding: .35rem .75rem;
+        border-radius: 20px;
+        margin-top: 1rem;
+        backdrop-filter: blur(6px);
+    }
+
+    /* Pipeline steps visualisation */
+    .pipeline-steps {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        margin: 1rem 0 2rem;
+        overflow-x: auto;
+    }
+
+    .ps-step {
+        flex: 1;
+        min-width: 130px;
+        background: #fff;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 0;
+        padding: 1rem .85rem;
+        text-align: center;
+        position: relative;
+        font-size: .82rem;
+        transition: background .2s;
+    }
+
+    .ps-step:first-child {
+        border-radius: 12px 0 0 12px;
+    }
+
+    .ps-step:last-child {
+        border-radius: 0 12px 12px 0;
+        border-right: 1.5px solid #e5e7eb;
+    }
+
+    .ps-step:not(:last-child)::after {
+        content: '→';
+        position: absolute;
+        right: -10px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1rem;
+        color: #9ca3af;
+        background: #fff;
+        z-index: 1;
+        width: 20px;
+        text-align: center;
+    }
+
+    .ps-icon {
+        font-size: 1.4rem;
+        margin-bottom: .4rem;
+    }
+
+    .ps-label {
+        font-weight: 700;
+        color: #1f2937;
+        font-size: .78rem;
+        line-height: 1.3;
+    }
+
+    .ps-sub {
+        color: #9ca3af;
+        font-size: .7rem;
+        margin-top: .2rem;
+    }
+
+    /* Form card */
+    .ra-card {
+        background: #fff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, .07), 0 0 0 1px rgba(0, 0, 0, .04);
+        margin-bottom: 1.5rem;
+    }
+
+    .ra-section-header {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: .8rem;
+        border-bottom: 2px solid #f0fdfa;
+    }
+
+    .ra-section-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+
+    .ra-section-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+
+    .ra-input {
+        padding: .75rem 1rem;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: .9rem;
+        color: #1f2937;
+        transition: border-color .2s, box-shadow .2s;
+        background: #f9fafb;
+        font-family: inherit;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .ra-input:focus {
+        outline: none;
+        border-color: var(--ra-accent);
+        box-shadow: 0 0 0 3px var(--ra-glow);
+        background: #fff;
+    }
+
+    textarea.ra-input {
+        resize: vertical;
+        min-height: 90px;
+    }
+
+    .form-grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.2rem;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+    }
+
+    label {
+        font-size: .85rem;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    label .opt {
+        color: #9ca3af;
+        font-weight: 400;
+    }
+
+    /* Multi-file drop zone */
+    .drop-zone {
+        border: 2.5px dashed #5eead4;
+        border-radius: 16px;
+        padding: 3rem 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .25s;
+        background: #f0fdfa;
+        position: relative;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+        border-color: var(--ra-accent);
+        background: #ccfbf1;
+    }
+
+    .drop-zone input[type="file"] {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+        width: 100%;
+        height: 100%;
+    }
+
+    .drop-icon {
+        font-size: 3rem;
+        color: var(--ra-accent);
+        margin-bottom: .75rem;
+        display: block;
+    }
+
+    .drop-main {
+        font-weight: 700;
+        color: var(--ra-primary);
+        font-size: 1rem;
+        margin-bottom: .3rem;
+    }
+
+    .drop-hint {
+        color: #6b7280;
+        font-size: .82rem;
+    }
+
+    /* File chips */
+    .file-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+        margin-top: .85rem;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        background: #ccfbf1;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+        border-radius: 20px;
+        padding: .3rem .75rem;
+        font-size: .8rem;
+        font-weight: 600;
+    }
+
+    .chip i {
+        color: #059669;
+    }
+
+    /* Report type badges */
+    .rt-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: .75rem;
+        margin-top: .5rem;
+    }
+
+    .rt-card {
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        padding: .85rem .75rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all .2s;
+    }
+
+    .rt-card:hover {
+        border-color: var(--ra-accent);
+        background: #f0fdfa;
+    }
+
+    .rt-card.selected {
+        border-color: var(--ra-accent);
+        background: var(--ra-bg);
+    }
+
+    .rt-icon {
+        font-size: 1.5rem;
+        display: block;
+        margin-bottom: .35rem;
+    }
+
+    .rt-label {
+        font-size: .75rem;
+        font-weight: 700;
+        color: #1f2937;
+    }
+
+    .rt-sub {
+        font-size: .68rem;
+        color: #9ca3af;
+    }
+
+    /* Info tip */
+    .info-tip {
+        display: flex;
+        gap: .5rem;
+        background: #fefce8;
+        border: 1px solid #fde68a;
+        border-radius: 10px;
+        padding: .85rem 1rem;
+        font-size: .83rem;
+        color: #92400e;
+        margin-top: 1rem;
+    }
+
+    /* Submit */
+    .ra-submit {
+        width: 100%;
+        padding: 1rem;
+        background: linear-gradient(135deg, var(--ra-primary), var(--ra-accent));
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .25s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: .7rem;
+    }
+
+    .ra-submit:hover {
+        box-shadow: 0 4px 18px rgba(20, 184, 166, .35);
+        transform: translateY(-1px);
+    }
+
+    /* Loading overlay */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(4, 47, 46, .82);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .loading-overlay.active {
+        display: flex;
+    }
+
+    .ra-spinner {
+        width: 80px;
+        height: 80px;
+        border: 6px solid rgba(255, 255, 255, .18);
+        border-top-color: #5eead4;
+        border-radius: 50%;
+        animation: spin .9s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .loading-text {
+        color: #fff;
+        font-size: 1.15rem;
+        font-weight: 700;
+        text-align: center;
+    }
+
+    .loading-sub {
+        color: rgba(255, 255, 255, .65);
+        font-size: .88rem;
+        text-align: center;
+        max-width: 300px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+
+        .form-grid-2,
+        .rt-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .pipeline-steps {
+            flex-direction: column;
+            gap: .5rem;
+        }
+
+        .ps-step {
+            border-radius: 10px !important;
+            border: 1.5px solid #e5e7eb !important;
+        }
+
+        .ps-step::after {
+            display: none;
+        }
+    }
+</style>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="raLoading">
+    <div class="ra-spinner"></div>
+    <div class="loading-text">🧬 Analysing Reports…</div>
+    <div class="loading-sub" id="raStep">Uploading to Amazon S3…</div>
+</div>
+
+<div style="max-width:900px;margin:0 auto;padding:1.5rem;">
+
+    <!-- Hero -->
+    <div class="ra-hero">
+        <div class="ra-hero-title">
+            <i class="fas fa-file-medical-alt" style="color:#5eead4;"></i>
+            Multimodal Report Analysis
+        </div>
+        <p class="ra-hero-subtitle">
+            Upload your lab reports, blood panels, or scans. Our AI extracts structured data
+            using Amazon Textract, identifies clinical entities with Comprehend Medical,
+            and generates a full diagnostic prediction report via Bedrock.
+        </p>
+        <div style="display:flex;flex-wrap:wrap;gap:.65rem;margin-top:1rem;">
+            <span class="ra-badge"><i class="fas fa-file-pdf"></i> PDF &amp; Image Reports</span>
+            <span class="ra-badge"><i class="fas fa-magic"></i> Amazon Textract OCR</span>
+            <span class="ra-badge"><i class="fas fa-robot"></i> Bedrock AI Reasoning</span>
+            <span class="ra-badge"><i class="fas fa-lock"></i> AES-256 Encrypted</span>
+        </div>
+    </div>
+
+    <!-- Pipeline Steps -->
+    <div style="margin-bottom:1.75rem;">
+        <div
+            style="font-size:.82rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.75rem;">
+            AI Processing Pipeline
+        </div>
+        <div class="pipeline-steps">
+            <div class="ps-step">
+                <div class="ps-icon">☁️</div>
+                <div class="ps-label">S3 Upload</div>
+                <div class="ps-sub">Encrypted Storage</div>
+            </div>
+            <div class="ps-step">
+                <div class="ps-icon">📑</div>
+                <div class="ps-label">Textract OCR</div>
+                <div class="ps-sub">Text Extraction</div>
+            </div>
+            <div class="ps-step">
+                <div class="ps-icon">🔬</div>
+                <div class="ps-label">Comprehend</div>
+                <div class="ps-sub">Clinical NLP</div>
+            </div>
+            <div class="ps-step">
+                <div class="ps-icon">🧠</div>
+                <div class="ps-label">Bedrock LLM</div>
+                <div class="ps-sub">AI Prediction</div>
+            </div>
+            <div class="ps-step">
+                <div class="ps-icon">💾</div>
+                <div class="ps-label">DynamoDB</div>
+                <div class="ps-sub">Persist Results</div>
+            </div>
+            <div class="ps-step">
+                <div class="ps-icon">🚨</div>
+                <div class="ps-label">SNS Alert</div>
+                <div class="ps-sub">If High/Critical</div>
+            </div>
+        </div>
+    </div>
+
+    <form action="{{ url_for('report_analysis') }}" method="POST" enctype="multipart/form-data" id="raForm"
+        onsubmit="startLoading()">
+
+        <!-- Report Upload -->
+        <div class="ra-card">
+            <div class="ra-section-header">
+                <div class="ra-section-icon" style="background:#ccfbf1;color:#0f766e;">
+                    <i class="fas fa-file-upload"></i>
+                </div>
+                <h2 class="ra-section-title">Upload Lab Reports / Scans</h2>
+            </div>
+
+            <div class="drop-zone" id="dropZone">
+                <input type="file" name="report_files" id="reportFiles" accept=".pdf,.jpg,.jpeg,.png,.bmp,.tiff"
+                    multiple onchange="updateChips(this)">
+                <span class="drop-icon"><i class="fas fa-cloud-upload-alt"></i></span>
+                <div class="drop-main">Click or drag to upload reports</div>
+                <div class="drop-hint">PDF, JPG, PNG — up to 5 files · 16 MB each<br>Lab reports, blood panels, X-rays,
+                    prescriptions accepted</div>
+            </div>
+
+            <div class="file-chips" id="fileChips"></div>
+
+            <div class="info-tip" style="margin-top:1rem;">
+                <i class="fas fa-shield-alt" style="flex-shrink:0;margin-top:.1rem;color:#d97706;"></i>
+                <span>All files are uploaded to Amazon S3 with AES-256 server-side encryption. Files are processed
+                    immediately and stored securely.</span>
+            </div>
+        </div>
+
+        <!-- Report Type Hint -->
+        <div class="ra-card">
+            <div class="ra-section-header">
+                <div class="ra-section-icon" style="background:#ede9fe;color:#7c3aed;">
+                    <i class="fas fa-tags"></i>
+                </div>
+                <h2 class="ra-section-title">Report Type <span style="font-weight:400;color:#9ca3af;">(Optional hint for
+                        better classification)</span></h2>
+            </div>
+            <div class="rt-grid">
+                <label class="rt-card" id="rt-blood">
+                    <input type="radio" name="report_type_hint" value="blood" hidden>
+                    <span class="rt-icon">🩸</span>
+                    <span class="rt-label">Blood / CBC</span>
+                    <span class="rt-sub">WBC, RBC, Platelets</span>
+                </label>
+                <label class="rt-card" id="rt-lipid">
+                    <input type="radio" name="report_type_hint" value="lipid" hidden>
+                    <span class="rt-icon">💊</span>
+                    <span class="rt-label">Lipid Panel</span>
+                    <span class="rt-sub">Cholesterol, LDL, HDL</span>
+                </label>
+                <label class="rt-card" id="rt-thyroid">
+                    <input type="radio" name="report_type_hint" value="thyroid" hidden>
+                    <span class="rt-icon">🦋</span>
+                    <span class="rt-label">Thyroid</span>
+                    <span class="rt-sub">TSH, T3, T4</span>
+                </label>
+                <label class="rt-card" id="rt-imaging">
+                    <input type="radio" name="report_type_hint" value="imaging" hidden>
+                    <span class="rt-icon">🩻</span>
+                    <span class="rt-label">Imaging</span>
+                    <span class="rt-sub">X-Ray, CT, MRI</span>
+                </label>
+            </div>
+        </div>
+
+        <!-- Patient Context -->
+        <div class="ra-card">
+            <div class="ra-section-header">
+                <div class="ra-section-icon" style="background:#dbeafe;color:#2563eb;">
+                    <i class="fas fa-user"></i>
+                </div>
+                <h2 class="ra-section-title">Patient Context</h2>
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="age">Age <span class="opt">(optional)</span></label>
+                    <input type="number" id="age" name="age" class="ra-input" placeholder="e.g. 45" min="1" max="120">
+                </div>
+                <div class="form-group">
+                    <label for="gender">Gender <span class="opt">(optional)</span></label>
+                    <select id="gender" name="gender" class="ra-input">
+                        <option value="">Select gender</option>
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Non-binary</option>
+                        <option>Prefer not to say</option>
+                    </select>
+                </div>
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label for="context_notes">Context / Symptoms <span class="opt">(optional — helps AI interpret the
+                            reports)</span></label>
+                    <textarea id="context_notes" name="context_notes" class="ra-input"
+                        placeholder="E.g. Patient is diabetic with recent fatigue. Doctor requested CBC and thyroid panel."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vitals (optional) -->
+        <div class="ra-card">
+            <div class="ra-section-header">
+                <div class="ra-section-icon" style="background:#fee2e2;color:#dc2626;">
+                    <i class="fas fa-heartbeat"></i>
+                </div>
+                <h2 class="ra-section-title">Known Vitals <span style="font-weight:400;color:#9ca3af;">(optional)</span>
+                </h2>
+            </div>
+            <div class="form-grid-2">
+                <div class="form-group">
+                    <label for="bp">Blood Pressure (mmHg)</label>
+                    <input type="text" id="bp" name="bp" class="ra-input" placeholder="120/80">
+                </div>
+                <div class="form-group">
+                    <label for="spo2">SpO2 (%)</label>
+                    <input type="number" id="spo2" name="spo2" class="ra-input" placeholder="98" min="50" max="100"
+                        step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="hba1c">HbA1c (%)</label>
+                    <input type="number" id="hba1c" name="hba1c" class="ra-input" placeholder="5.5" min="2" max="20"
+                        step="0.1">
+                </div>
+                <div class="form-group">
+                    <label for="doctor_notes">Doctor Notes</label>
+                    <input type="text" id="doctor_notes" name="doctor_notes" class="ra-input"
+                        placeholder="e.g. Follow-up for hypertension management">
+                </div>
+            </div>
+        </div>
+
+        <!-- Disclaimer + Submit -->
+        <div class="ra-card" style="border-top:3px solid #ccfbf1;">
+            <div style="display:flex;gap:.65rem;background:#fef2f2;border:1px solid #fecaca;
+                        border-radius:10px;padding:.85rem 1rem;font-size:.83rem;color:#7f1d1d;margin-bottom:1.25rem;">
+                <i class="fas fa-exclamation-triangle" style="flex-shrink:0;color:#dc2626;margin-top:.1rem;"></i>
+                <span><strong>Medical Disclaimer:</strong> AI report analysis is an assistive tool only.
+                    It does not replace professional medical advice. All predictions flagged below 75% confidence
+                    are marked for mandatory physician review. Your doctor has final clinical authority.</span>
+            </div>
+            <button type="submit" class="ra-submit" id="raSubmit">
+                <i class="fas fa-file-medical-alt"></i>
+                Analyse Reports with AI
+                <i class="fas fa-arrow-right"></i>
+            </button>
+        </div>
+
+    </form>
+</div>
+
+<script>
+    // Drag-drop feedback
+    const dz = document.getElementById('dropZone');
+    dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('dragover'); });
+
+    function updateChips(input) {
+        const chips = document.getElementById('fileChips');
+        chips.innerHTML = '';
+        const icons = {
+            pdf: 'fa-file-pdf', jpg: 'fa-file-image', jpeg: 'fa-file-image',
+            png: 'fa-file-image', tiff: 'fa-file-image', bmp: 'fa-file-image'
+        };
+        Array.from(input.files).slice(0, 5).forEach(f => {
+            const ext = f.name.split('.').pop().toLowerCase();
+            const icon = icons[ext] || 'fa-file';
+            const sizeKb = (f.size / 1024).toFixed(0);
+            chips.innerHTML += `<span class="chip">
+                <i class="fas ${icon}"></i> ${f.name}
+                <span style="color:#6b7280;font-weight:400;">${sizeKb} KB</span>
+            </span>`;
+        });
+    }
+
+    // Report type card selection
+    document.querySelectorAll('.rt-card').forEach(card => {
+        card.addEventListener('click', () => {
+            document.querySelectorAll('.rt-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+        });
+    });
+
+    // Loading steps
+    const steps = [
+        'Uploading reports to Amazon S3…',
+        'Extracting text with Amazon Textract…',
+        'Identifying clinical entities (Comprehend Medical)…',
+        'Classifying abnormal markers…',
+        'Running multimodal prediction on Bedrock…',
+        'Saving results to DynamoDB…',
+        'Checking for critical alerts via SNS…',
+        'Compiling your report — almost done…'
+    ];
+    let si = 0;
+
+    function startLoading() {
+        document.getElementById('raLoading').classList.add('active');
+        document.getElementById('raSubmit').disabled = true;
+        const el = document.getElementById('raStep');
+        const iv = setInterval(() => {
+            si = (si + 1) % steps.length;
+            el.textContent = steps[si];
+        }, 2000);
+        setTimeout(() => clearInterval(iv), 90000);
+    }
+</script>
+{% endblock %}
