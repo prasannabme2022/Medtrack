@@ -1,66 +1,963 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div
-    style="min-height: 80vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: #f3f4f6; padding: 2rem;">
+<style>
+    /* ── Reset & Base ─────────────────────────────────────── */
+    .home-wrap {
+        font-family: 'Inter', sans-serif;
+        overflow-x: hidden;
+    }
 
-    <div style="text-align: center; margin-bottom: 3rem; max-width: 800px;">
-        <h1 class="text-gradient" style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; line-height: 1.2;">
-            MedTrack: AWS Cloud-Enabled Healthcare Management System
-        </h1>
-        <p style="color: #6b7280; font-size: 1.125rem;">
-            Secure, intelligent, and accessible healthcare for everyone.
-        </p>
+    /* ── Hero ─────────────────────────────────────────────── */
+    .hero {
+        position: relative;
+        min-height: 88vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 40%, #0c4a6e 70%, #065f46 100%);
+        overflow: hidden;
+        padding: 4rem 2rem 5rem;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(ellipse 80% 60% at 20% 40%, rgba(56, 189, 248, 0.18) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 50% at 80% 70%, rgba(16, 185, 129, 0.14) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    /* animated rings */
+    .hero-ring {
+        position: absolute;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.06);
+        animation: ringPulse 6s ease-in-out infinite;
+    }
+
+    .hero-ring:nth-child(1) {
+        width: 320px;
+        height: 320px;
+        top: -60px;
+        right: -60px;
+        animation-delay: 0s;
+    }
+
+    .hero-ring:nth-child(2) {
+        width: 200px;
+        height: 200px;
+        top: 60px;
+        right: 60px;
+        animation-delay: 1.2s;
+    }
+
+    .hero-ring:nth-child(3) {
+        width: 500px;
+        height: 500px;
+        bottom: -100px;
+        left: -100px;
+        animation-delay: 2.4s;
+    }
+
+    @keyframes ringPulse {
+
+        0%,
+        100% {
+            transform: scale(1);
+            opacity: .4
+        }
+
+        50% {
+            transform: scale(1.06);
+            opacity: .15
+        }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        max-width: 820px;
+    }
+
+    .hero-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: #7dd3fc;
+        font-size: .78rem;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        padding: .45rem 1.1rem;
+        border-radius: 50px;
+        margin-bottom: 1.8rem;
+        backdrop-filter: blur(6px);
+    }
+
+    .hero-badge span {
+        width: 7px;
+        height: 7px;
+        background: #10b981;
+        border-radius: 50%;
+        animation: blink 1.5s infinite;
+    }
+
+    @keyframes blink {
+
+        0%,
+        100% {
+            opacity: 1
+        }
+
+        50% {
+            opacity: .3
+        }
+    }
+
+    .hero-title {
+        font-size: clamp(2.2rem, 5vw, 3.8rem);
+        font-weight: 800;
+        line-height: 1.12;
+        color: #fff;
+        margin-bottom: 1.4rem;
+    }
+
+    .hero-title .accent {
+        color: #38bdf8;
+    }
+
+    .hero-subtitle {
+        font-size: 1.15rem;
+        color: rgba(255, 255, 255, .65);
+        line-height: 1.75;
+        max-width: 600px;
+        margin: 0 auto 2.5rem;
+    }
+
+    .hero-btns {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary-hero {
+        padding: .85rem 2.2rem;
+        border-radius: 50px;
+        font-weight: 700;
+        font-size: .97rem;
+        background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+        color: #0f172a;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        box-shadow: 0 8px 24px rgba(56, 189, 248, .35);
+        transition: all .25s;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-primary-hero:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 32px rgba(56, 189, 248, .5);
+    }
+
+    .btn-outline-hero {
+        padding: .85rem 2.2rem;
+        border-radius: 50px;
+        font-weight: 600;
+        font-size: .97rem;
+        background: rgba(255, 255, 255, .08);
+        color: #fff;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+        border: 1px solid rgba(255, 255, 255, .22);
+        backdrop-filter: blur(4px);
+        transition: all .25s;
+    }
+
+    .btn-outline-hero:hover {
+        background: rgba(255, 255, 255, .16);
+        transform: translateY(-2px);
+    }
+
+    /* ── Stats Strip ─────────────────────────────────────── */
+    .stats-strip {
+        background: #fff;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 1.6rem 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3rem;
+        flex-wrap: wrap;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, .06);
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-num {
+        font-size: 1.85rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #0ea5e9, #6366f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1;
+    }
+
+    .stat-label {
+        font-size: .78rem;
+        color: #9ca3af;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .05em;
+        margin-top: .25rem;
+    }
+
+    .stat-divider {
+        width: 1px;
+        height: 40px;
+        background: #e5e7eb;
+    }
+
+    /* ── Section Commons ─────────────────────────────────── */
+    .section {
+        padding: 5rem 2rem;
+    }
+
+    .section-alt {
+        background: #f8fafc;
+    }
+
+    .section-center {
+        text-align: center;
+        margin-bottom: 3.5rem;
+    }
+
+    .section-tag {
+        display: inline-block;
+        background: #eff6ff;
+        color: #3b82f6;
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        padding: .35rem .9rem;
+        border-radius: 50px;
+        margin-bottom: 1rem;
+    }
+
+    .section-title {
+        font-size: clamp(1.7rem, 3vw, 2.4rem);
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.2;
+        margin-bottom: .85rem;
+    }
+
+    .section-sub {
+        font-size: 1rem;
+        color: #6b7280;
+        max-width: 580px;
+        margin: 0 auto;
+        line-height: 1.7;
+    }
+
+    /* ── Feature Cards ───────────────────────────────────── */
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1.75rem;
+        max-width: 1100px;
+        margin: 0 auto;
+    }
+
+    .feature-card {
+        background: #fff;
+        border-radius: 20px;
+        border: 1px solid #e5e7eb;
+        padding: 2.5rem 2rem;
+        transition: all .3s;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .04);
+    }
+
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--card-accent, linear-gradient(90deg, #38bdf8, #6366f1));
+        border-radius: 20px 20px 0 0;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 48px rgba(0, 0, 0, .1);
+        border-color: transparent;
+    }
+
+    .card-icon-wrap {
+        width: 56px;
+        height: 56px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.4rem;
+        font-size: 1.5rem;
+        color: #fff;
+    }
+
+    .card-label {
+        font-size: .72rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        margin-bottom: .5rem;
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: .85rem;
+    }
+
+    .card-desc {
+        font-size: .92rem;
+        color: #6b7280;
+        line-height: 1.7;
+        margin-bottom: 1.4rem;
+    }
+
+    .card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .4rem;
+    }
+
+    .tag {
+        background: #f1f5f9;
+        color: #475569;
+        font-size: .7rem;
+        font-weight: 600;
+        padding: .25rem .65rem;
+        border-radius: 6px;
+    }
+
+    .card-link {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        font-size: .85rem;
+        font-weight: 600;
+        text-decoration: none;
+        margin-top: 1.2rem;
+        transition: gap .2s;
+    }
+
+    .card-link:hover {
+        gap: .75rem;
+    }
+
+    /* ── AWS Services Belt ───────────────────────────────── */
+    .aws-belt {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        padding: 3rem 2rem;
+        text-align: center;
+    }
+
+    .aws-belt-title {
+        color: rgba(255, 255, 255, .55);
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        margin-bottom: 1.4rem;
+    }
+
+    .aws-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .75rem;
+        justify-content: center;
+    }
+
+    .aws-pill {
+        background: rgba(255, 255, 255, .07);
+        border: 1px solid rgba(255, 255, 255, .12);
+        color: #cbd5e1;
+        font-size: .82rem;
+        font-weight: 600;
+        padding: .5rem 1.1rem;
+        border-radius: 50px;
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        transition: all .2s;
+    }
+
+    .aws-pill:hover {
+        background: rgba(56, 189, 248, .12);
+        border-color: rgba(56, 189, 248, .4);
+        color: #38bdf8;
+    }
+
+    .aws-pill i {
+        font-size: .75rem;
+        color: #f59e0b;
+    }
+
+    /* ── How it Works ────────────────────────────────────── */
+    .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 0;
+        max-width: 1000px;
+        margin: 0 auto;
+        position: relative;
+    }
+
+    .steps::before {
+        content: '';
+        position: absolute;
+        top: 32px;
+        left: 10%;
+        right: 10%;
+        height: 2px;
+        background: linear-gradient(90deg, #e2e8f0, #38bdf8, #6366f1, #e2e8f0);
+    }
+
+    .step {
+        text-align: center;
+        padding: 0 1.2rem;
+        position: relative;
+    }
+
+    .step-num {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #38bdf8, #6366f1);
+        color: #fff;
+        font-size: 1.3rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.2rem;
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 8px 20px rgba(56, 189, 248, .3);
+    }
+
+    .step-title {
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: .5rem;
+    }
+
+    .step-desc {
+        font-size: .85rem;
+        color: #6b7280;
+        line-height: 1.6;
+    }
+
+    /* ── CTA ─────────────────────────────────────────────── */
+    .cta-section {
+        background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 50%, #8b5cf6 100%);
+        padding: 5rem 2rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 70% 70% at 50% 120%, rgba(255, 255, 255, .12), transparent);
+    }
+
+    .cta-title {
+        font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+        font-weight: 800;
+        color: #fff;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+
+    .cta-sub {
+        color: rgba(255, 255, 255, .8);
+        font-size: 1.05rem;
+        margin-bottom: 2.5rem;
+        max-width: 540px;
+        margin-left: auto;
+        margin-right: auto;
+        position: relative;
+    }
+
+    .cta-btns {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+        position: relative;
+    }
+
+    .btn-cta-white {
+        background: #fff;
+        color: #4f46e5;
+        font-weight: 700;
+        font-size: .97rem;
+        padding: .9rem 2.4rem;
+        border-radius: 50px;
+        text-decoration: none;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, .2);
+        transition: all .25s;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .btn-cta-white:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 32px rgba(0, 0, 0, .3);
+    }
+
+    .btn-cta-outline {
+        border: 2px solid rgba(255, 255, 255, .5);
+        color: #fff;
+        font-weight: 600;
+        font-size: .97rem;
+        padding: .9rem 2.4rem;
+        border-radius: 50px;
+        text-decoration: none;
+        backdrop-filter: blur(4px);
+        transition: all .25s;
+        display: inline-flex;
+        align-items: center;
+        gap: .5rem;
+    }
+
+    .btn-cta-outline:hover {
+        background: rgba(255, 255, 255, .15);
+        border-color: #fff;
+    }
+
+    /* ── Testimonials ────────────────────────────────────── */
+    .testimonials {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+
+    .tcard {
+        background: #fff;
+        border: 1px solid #f1f5f9;
+        border-radius: 18px;
+        padding: 1.8rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, .04);
+        transition: transform .25s;
+    }
+
+    .tcard:hover {
+        transform: translateY(-4px);
+    }
+
+    .tcard-stars {
+        color: #f59e0b;
+        font-size: .9rem;
+        margin-bottom: .85rem;
+    }
+
+    .tcard-body {
+        font-size: .92rem;
+        color: #374151;
+        line-height: 1.7;
+        margin-bottom: 1.2rem;
+        font-style: italic;
+    }
+
+    .tcard-author {
+        display: flex;
+        align-items: center;
+        gap: .7rem;
+    }
+
+    .tcard-avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: 700;
+        font-size: .9rem;
+        flex-shrink: 0;
+    }
+
+    .tcard-name {
+        font-weight: 700;
+        font-size: .85rem;
+        color: #111827;
+    }
+
+    .tcard-role {
+        font-size: .73rem;
+        color: #9ca3af;
+    }
+
+    @media(max-width:640px) {
+        .steps::before {
+            display: none;
+        }
+
+        .stat-divider {
+            display: none;
+        }
+
+        .stats-strip {
+            gap: 1.5rem;
+        }
+    }
+</style>
+
+<div class="home-wrap">
+
+    <!-- ════════════ HERO ════════════ -->
+    <section class="hero">
+        <div class="hero-ring"></div>
+        <div class="hero-ring"></div>
+        <div class="hero-ring"></div>
+
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span></span> Live on AWS Cloud — India Region
+            </div>
+
+            <h1 class="hero-title">
+                MedTrack: <span class="accent">AWS Cloud-Enabled</span><br>
+                Healthcare Management
+            </h1>
+
+            <p class="hero-subtitle">
+                A HIPAA-aligned, AI-powered platform connecting patients and doctors through
+                intelligent diagnostics, real-time appointment management, and secure medical records.
+            </p>
+
+            <div class="hero-btns">
+                <a href="{{ url_for('login') }}" class="btn-primary-hero">
+                    <i class="fas fa-sign-in-alt"></i> Get Started
+                </a>
+                <a href="{{ url_for('signup') }}" class="btn-outline-hero">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </a>
+                <a href="{{ url_for('about') }}" class="btn-outline-hero">
+                    <i class="fas fa-info-circle"></i> Learn More
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════ STATS ════════════ -->
+    <div class="stats-strip">
+        <div class="stat-item">
+            <div class="stat-num" id="s1">10,000+</div>
+            <div class="stat-label">Patients Served</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-num" id="s2">500+</div>
+            <div class="stat-label">Verified Doctors</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-num" id="s3">98.5%</div>
+            <div class="stat-label">Uptime SLA</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-num" id="s4">7</div>
+            <div class="stat-label">AWS Services</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+            <div class="stat-num" id="s5">AES-256</div>
+            <div class="stat-label">Encryption Standard</div>
+        </div>
     </div>
 
-    <div
-        style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; max-width: 1200px; width: 100%;">
+    <!-- ════════════ FEATURE CARDS ════════════ -->
+    <section class="section">
+        <div class="section-center">
+            <div class="section-tag">Platform Features</div>
+            <h2 class="section-title">Everything Your Practice Needs</h2>
+            <p class="section-sub">
+                A unified platform for patients to manage health and for doctors to deliver better clinical outcomes —
+                all powered by AWS AI services.
+            </p>
+        </div>
 
-        <!-- Card 1: For Patients -->
-        <a href="{{ url_for('login') }}" style="text-decoration: none; color: inherit;">
-            <div style="background: white; padding: 3rem 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); text-align: center; height: 100%; transition: transform 0.2s; cursor: pointer;"
-                onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                <div
-                    style="width: 60px; height: 60px; background: #0284c7; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
-                    <i class="fas fa-user-injured" style="color: white; font-size: 2rem;"></i>
+        <div class="cards-grid">
+
+            <!-- Patient Card -->
+            <div class="feature-card" style="--card-accent: linear-gradient(90deg,#38bdf8,#0ea5e9);">
+                <div class="card-icon-wrap" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9);">
+                    <i class="fas fa-user-injured"></i>
                 </div>
-                <h3 style="color: #111827; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">For Patients</h3>
-                <p style="color: #6b7280; font-size: 1rem; line-height: 1.6;">
-                    Track your health journey, upload reports securely, and book appointments with ease.
-                </p>
-            </div>
-        </a>
-
-        <!-- Card 2: For Doctors -->
-        <a href="{{ url_for('login') }}" style="text-decoration: none; color: inherit;">
-            <div style="background: white; padding: 3rem 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); text-align: center; height: 100%; transition: transform 0.2s; cursor: pointer;"
-                onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                <div
-                    style="width: 60px; height: 60px; background: #2563eb; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
-                    <i class="fas fa-user-md" style="color: white; font-size: 2rem;"></i>
+                <div class="card-label" style="color:#0ea5e9;">For Patients</div>
+                <h3 class="card-title">Your Health, Your Control</h3>
+                <p class="card-desc">Upload lab reports, book appointments, track your medical history, and get
+                    AI-powered health insights — all in one secure dashboard.</p>
+                <div class="card-tags">
+                    <span class="tag">Appointments</span>
+                    <span class="tag">Medical Vault</span>
+                    <span class="tag">AI Analysis</span>
+                    <span class="tag">Invoices</span>
                 </div>
-                <h3 style="color: #111827; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">For Doctors</h3>
-                <p style="color: #6b7280; font-size: 1rem; line-height: 1.6;">
-                    Manage patient records, review AI-assisted diagnostics, and streamline your workflow.
-                </p>
+                <a href="{{ url_for('login') }}" class="card-link" style="color:#0ea5e9;">
+                    Patient Login <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
-        </a>
 
-        <!-- Card 3: AI Powered -->
-        <a href="{{ url_for('about') }}" style="text-decoration: none; color: inherit;">
-            <div style="background: white; padding: 3rem 2rem; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); text-align: center; height: 100%; transition: transform 0.2s; cursor: pointer;"
-                onmouseover="this.style.transform='translateY(-5px)'" onmouseout="this.style.transform='translateY(0)'">
-                <div
-                    style="width: 60px; height: 60px; background: #0284c7; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem auto;">
-                    <i class="fas fa-brain" style="color: white; font-size: 2rem;"></i>
+            <!-- Doctor Card -->
+            <div class="feature-card" style="--card-accent: linear-gradient(90deg,#6366f1,#8b5cf6);">
+                <div class="card-icon-wrap" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">
+                    <i class="fas fa-user-md"></i>
                 </div>
-                <h3 style="color: #111827; font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem;">AI Powered</h3>
-                <p style="color: #6b7280; font-size: 1rem; line-height: 1.6;">
-                    Leverage cutting-edge AI analysis for preliminary report insights and health tracking.
-                </p>
+                <div class="card-label" style="color:#6366f1;">For Doctors</div>
+                <h3 class="card-title">Streamline Your Clinical Workflow</h3>
+                <p class="card-desc">Review appointment queues, access patient histories, write notes, view AI
+                    diagnostic alerts, and manage consultation flow in real-time.</p>
+                <div class="card-tags">
+                    <span class="tag">Queue Management</span>
+                    <span class="tag">AI Alerts</span>
+                    <span class="tag">Patient Vault</span>
+                    <span class="tag">Chat</span>
+                </div>
+                <a href="{{ url_for('login') }}" class="card-link" style="color:#6366f1;">
+                    Doctor Login <i class="fas fa-arrow-right"></i>
+                </a>
             </div>
-        </a>
 
+            <!-- AI Engine Card -->
+            <div class="feature-card" style="--card-accent: linear-gradient(90deg,#10b981,#059669);">
+                <div class="card-icon-wrap" style="background:linear-gradient(135deg,#10b981,#059669);">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div class="card-label" style="color:#059669;">AI Engine</div>
+                <h3 class="card-title">Multimodal Disease Prediction</h3>
+                <p class="card-desc">Upload images, describe symptoms, provide vitals, and attach lab reports. Our
+                    Bedrock-powered engine returns a structured clinical prediction instantly.</p>
+                <div class="card-tags">
+                    <span class="tag">Rekognition</span>
+                    <span class="tag">Textract</span>
+                    <span class="tag">Comprehend Medical</span>
+                    <span class="tag">Bedrock</span>
+                </div>
+                <a href="{{ url_for('login') }}" class="card-link" style="color:#059669;">
+                    Try AI Analysis <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Blood Bank Card -->
+            <div class="feature-card" style="--card-accent: linear-gradient(90deg,#ef4444,#dc2626);">
+                <div class="card-icon-wrap" style="background:linear-gradient(135deg,#ef4444,#dc2626);">
+                    <i class="fas fa-tint"></i>
+                </div>
+                <div class="card-label" style="color:#dc2626;">Blood Bank</div>
+                <h3 class="card-title">Real-Time Blood Inventory</h3>
+                <p class="card-desc">Track live blood stock levels across all groups, manage donations, and trigger
+                    critical supply alerts via SNS notification system.</p>
+                <div class="card-tags">
+                    <span class="tag">Live Stock</span>
+                    <span class="tag">Donations</span>
+                    <span class="tag">SNS Alerts</span>
+                </div>
+                <a href="{{ url_for('login') }}" class="card-link" style="color:#dc2626;">
+                    Check Stock <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Security Card -->
+            <div class="feature-card" style="--card-accent: linear-gradient(90deg,#f59e0b,#d97706);">
+                <div class="card-icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#d97706);">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <div class="card-label" style="color:#d97706;">Security</div>
+                <h3 class="card-title">HIPAA-Compliant by Design</h3>
+                <p class="card-desc">All files encrypted with AES-256 at rest in Amazon S3. Secure session management,
+                    role-based access control, and full audit logging built in.</p>
+                <div class="card-tags">
+                    <span class="tag">AES-256</span>
+                    <span class="tag">RBAC</span>
+                    <span class="tag">S3 Encrypted</span>
+                </div>
+                <a href="{{ url_for('about') }}" class="card-link" style="color:#d97706;">
+                    Learn More <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- Reports Card -->
+            <div class="feature-card" style="--card-accent: linear-gradient(90deg,#14b8a6,#0f766e);">
+                <div class="card-icon-wrap" style="background:linear-gradient(135deg,#14b8a6,#0f766e);">
+                    <i class="fas fa-file-medical-alt"></i>
+                </div>
+                <div class="card-label" style="color:#0f766e;">Report Analysis</div>
+                <h3 class="card-title">Lab Report Intelligence</h3>
+                <p class="card-desc">Upload PDFs or images of blood panels, lipid tests, and thyroid reports. Amazon
+                    Textract extracts values; Comprehend Medical flags clinical entities.</p>
+                <div class="card-tags">
+                    <span class="tag">Textract OCR</span>
+                    <span class="tag">Abnormal Flags</span>
+                    <span class="tag">PDF Support</span>
+                </div>
+                <a href="{{ url_for('login') }}" class="card-link" style="color:#0f766e;">
+                    Upload Report <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- ════════════ AWS SERVICES BELT ════════════ -->
+    <div class="aws-belt">
+        <div class="aws-belt-title">Powered by AWS Cloud Services</div>
+        <div class="aws-pills">
+            <div class="aws-pill"><i class="fas fa-database"></i> Amazon DynamoDB</div>
+            <div class="aws-pill"><i class="fas fa-bell"></i> Amazon SNS</div>
+            <div class="aws-pill"><i class="fas fa-archive"></i> Amazon S3</div>
+            <div class="aws-pill"><i class="fas fa-eye"></i> Amazon Rekognition</div>
+            <div class="aws-pill"><i class="fas fa-file-alt"></i> Amazon Textract</div>
+            <div class="aws-pill"><i class="fas fa-stethoscope"></i> Comprehend Medical</div>
+            <div class="aws-pill"><i class="fas fa-robot"></i> Amazon Bedrock (Claude)</div>
+        </div>
     </div>
+
+    <!-- ════════════ HOW IT WORKS ════════════ -->
+    <section class="section section-alt">
+        <div class="section-center">
+            <div class="section-tag">How It Works</div>
+            <h2 class="section-title">From Upload to Insight in Seconds</h2>
+            <p class="section-sub">Our end-to-end AI pipeline processes your data through AWS services to deliver
+                structured, actionable health predictions.</p>
+        </div>
+
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-title">Create Account</div>
+                <div class="step-desc">Sign up as a patient or doctor. Your profile is securely stored in Amazon
+                    DynamoDB.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-title">Upload Data</div>
+                <div class="step-desc">Upload medical images, describe symptoms, input vitals, or attach lab report
+                    PDFs.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-title">AI Processes</div>
+                <div class="step-desc">S3 stores files → Rekognition & Textract extract features → Comprehend Medical
+                    identifies entities.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-title">Bedrock Predicts</div>
+                <div class="step-desc">Claude on Amazon Bedrock synthesizes all signals into a structured clinical
+                    prediction report.</div>
+            </div>
+            <div class="step">
+                <div class="step-num">5</div>
+                <div class="step-title">Doctor Alerted</div>
+                <div class="step-desc">For High/Critical cases, Amazon SNS instantly notifies the doctor via email and
+                    SMS.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════ TESTIMONIALS ════════════ -->
+    <section class="section">
+        <div class="section-center">
+            <div class="section-tag">Testimonials</div>
+            <h2 class="section-title">Trusted by Healthcare Professionals</h2>
+        </div>
+
+        <div class="testimonials">
+            <div class="tcard">
+                <div class="tcard-stars">★★★★★</div>
+                <p class="tcard-body">"MedTrack's AI flagged elevated HbA1c levels in a patient's uploaded report before
+                    the consultation. The Textract extraction was flawless."</p>
+                <div class="tcard-author">
+                    <div class="tcard-avatar" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">DR</div>
+                    <div>
+                        <div class="tcard-name">Dr. Raj Mehta</div>
+                        <div class="tcard-role">Endocrinologist, Apollo Hospitals</div>
+                    </div>
+                </div>
+            </div>
+            <div class="tcard">
+                <div class="tcard-stars">★★★★★</div>
+                <p class="tcard-body">"Booking an appointment, getting the confirmation SMS, and seeing my lab results
+                    analysed — all done in under 5 minutes. Incredible platform."</p>
+                <div class="tcard-author">
+                    <div class="tcard-avatar" style="background:linear-gradient(135deg,#38bdf8,#0ea5e9);">PS</div>
+                    <div>
+                        <div class="tcard-name">Priya Sharma</div>
+                        <div class="tcard-role">Patient, MedTrack User</div>
+                    </div>
+                </div>
+            </div>
+            <div class="tcard">
+                <div class="tcard-stars">★★★★★</div>
+                <p class="tcard-body">"The doctor AI alert dashboard saved us from missing two critical cases in one
+                    week. The SNS integration is seamless and reliable."</p>
+                <div class="tcard-author">
+                    <div class="tcard-avatar" style="background:linear-gradient(135deg,#10b981,#059669);">AK</div>
+                    <div>
+                        <div class="tcard-name">Dr. Amit Kumar</div>
+                        <div class="tcard-role">Cardiologist, Fortis Healthcare</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ════════════ CTA ════════════ -->
+    <section class="cta-section">
+        <h2 class="cta-title">Ready to Transform Your Healthcare Experience?</h2>
+        <p class="cta-sub">Join thousands of patients and doctors already using MedTrack's AWS-powered intelligent
+            health platform.</p>
+        <div class="cta-btns">
+            <a href="{{ url_for('signup') }}" class="btn-cta-white">
+                <i class="fas fa-rocket"></i> Get Started Free
+            </a>
+            <a href="{{ url_for('login') }}" class="btn-cta-outline">
+                <i class="fas fa-sign-in-alt"></i> Sign In
+            </a>
+        </div>
+    </section>
+
 </div>
 {% endblock %}
