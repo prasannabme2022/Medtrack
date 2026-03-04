@@ -2369,6 +2369,181 @@ def debug_data():
         'visibility_analysis': analysis
     })
 
+
+# ============================================
+# AI ENGINE ROUTES  (required by base.html)
+# ============================================
+
+@app.route('/ai_companion')
+def ai_companion():
+    """AI Health Companion input form"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+    return render_template('ai_companion.html',
+                           current_user=session.get('user_name', session['user_id']),
+                           current_role=session.get('role', 'patient'))
+
+
+@app.route('/ai_predict', methods=['POST'])
+def ai_predict():
+    """Run the AI multimodal prediction pipeline"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+
+    try:
+        from ai_engine import run_ai_pipeline
+        import tempfile, os
+
+        patient_data = {
+            'patient_id':  session['user_id'],
+            'name':        request.form.get('name', session.get('user_name', 'Patient')),
+            'age':         request.form.get('age', 'N/A'),
+            'gender':      request.form.get('gender', 'N/A'),
+            'symptoms':    request.form.get('symptoms', ''),
+            'bp':          request.form.get('bp', 'N/A'),
+            'spo2':        request.form.get('spo2', 'N/A'),
+            'hba1c':       request.form.get('hba1c', 'N/A'),
+            'wbc':         request.form.get('wbc', 'N/A'),
+            'cholesterol': request.form.get('cholesterol', 'N/A'),
+        }
+
+        # Handle optional medical image
+        image_file = request.files.get('image')
+        image_obj  = image_file if image_file and image_file.filename else None
+
+        # Handle optional lab reports (multi-file)
+        report_files = request.files.getlist('lab_reports')
+        report_objs  = [f for f in report_files if f and f.filename]
+
+        prediction = run_ai_pipeline(
+            patient_data   = patient_data,
+            image_file     = image_obj,
+            report_files   = report_objs if report_objs else None
+        )
+
+        session['last_prediction'] = prediction
+        return redirect(url_for('ai_results'))
+
+    except Exception as e:
+        logger.error(f"AI predict error: {e}")
+        flash(f'AI analysis error: {str(e)}', 'error')
+        return redirect(url_for('ai_companion'))
+
+
+@app.route('/ai_results')
+def ai_results():
+    """Display the last AI prediction result"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+
+    prediction = session.get('last_prediction')
+    if not prediction:
+        flash('No prediction found. Please run an analysis first.', 'info')
+        return redirect(url_for('ai_companion'))
+
+    return render_template('ai_results.html',
+                           prediction = prediction,
+                           current_user = session.get('user_name', session['user_id']),
+                           current_role = session.get('role', 'patient'))
+
+
+@app.route('/doctor_ai_alerts')
+def doctor_ai_alerts():
+    """Doctor: view high-risk AI predictions dashboard"""
+    if 'user_id' not in session or session.get('role') != 'doctor':
+        flash('Please login as a doctor first.', 'error')
+        return redirect(url_for('login'))
+
+    try:
+        from ai_engine import _get_dynamo_table
+        import boto3
+        from boto3.dynamodb.conditions import Attr
+
+        preds_table = _get_dynamo_table('medtrack_ai_predictions')
+        alerts = []
+        if preds_table:
+            resp = preds_table.scan(
+                FilterExpression=Attr('severity').is_in(['High', 'Critical'])
+            )
+            alerts = resp.get('Items', [])
+            alerts.sort(key=lambda x: x.get('timestamp', ''), reverse=True)
+    except Exception as e:
+        logger.error(f"doctor_ai_alerts error: {e}")
+        alerts = []
+
+    return render_template('doctor_ai_alerts.html',
+                           alerts       = alerts,
+                           current_user = session.get('user_name', session['user_id']),
+                           current_role = 'doctor')
+
+
+@app.route('/report_analysis', methods=['GET', 'POST'])
+def report_analysis():
+    """Dedicated multimodal lab report analysis page"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        try:
+            from ai_engine import run_report_analysis_pipeline
+
+            report_files = request.files.getlist('report_files')
+            report_objs  = [f for f in report_files if f and f.filename]
+
+            if not report_objs:
+                flash('Please upload at least one report file.', 'error')
+                return redirect(url_for('report_analysis'))
+
+            patient_data = {
+                'patient_id': session['user_id'],
+                'name':       request.form.get('patient_name', session.get('user_name', 'Patient')),
+                'age':        request.form.get('age', 'N/A'),
+                'gender':     request.form.get('gender', 'N/A'),
+                'symptoms':   request.form.get('context_notes', ''),
+                'bp':         request.form.get('bp', 'N/A'),
+                'spo2':       request.form.get('spo2', 'N/A'),
+                'hba1c':      request.form.get('hba1c', 'N/A'),
+                'wbc':        request.form.get('wbc', 'N/A'),
+                'cholesterol': request.form.get('cholesterol', 'N/A'),
+            }
+
+            prediction = run_report_analysis_pipeline(report_objs, patient_data)
+            session['last_report_analysis'] = prediction
+            return redirect(url_for('report_analysis_results'))
+
+        except Exception as e:
+            logger.error(f"Report analysis error: {e}")
+            flash(f'Analysis error: {str(e)}', 'error')
+            return redirect(url_for('report_analysis'))
+
+    return render_template('report_analysis.html',
+                           current_user = session.get('user_name', session['user_id']),
+                           current_role = session.get('role', 'patient'))
+
+
+@app.route('/report_analysis_results')
+def report_analysis_results():
+    """Display report analysis results"""
+    if 'user_id' not in session:
+        flash('Please login first.', 'error')
+        return redirect(url_for('login'))
+
+    prediction = session.get('last_report_analysis')
+    if not prediction:
+        flash('No report analysis found. Please upload reports first.', 'info')
+        return redirect(url_for('report_analysis'))
+
+    return render_template('report_analysis_results.html',
+                           prediction   = prediction,
+                           current_user = session.get('user_name', session['user_id']),
+                           current_role = session.get('role', 'patient'))
+
+
+# ============================================
 if __name__ == '__main__':
     print("--- MedTrack AWS Setup Complete ---")
     print("Initializing DynamoDB Tables...")
@@ -2380,3 +2555,4 @@ if __name__ == '__main__':
     print("Starting MedTrack Server with AWS Integration...")
     print(f"Server started at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     app.run(host='0.0.0.0', port=5000, debug=True)
+
