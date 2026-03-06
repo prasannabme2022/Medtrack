@@ -1,315 +1,384 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div
-    style="max-width: 1400px; margin: 0 auto; padding: 2rem; width: 100%; display: flex; flex-direction: column; align-items: center;">
-    <div style="width: 100%; max-width: 1400px;">
-        <!-- Header -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h1 style="margin: 0; font-size: 1.8rem; color: #1f2937; font-weight: 600;">Patient Dashboard</h1>
-            <div style="display: flex; align-items: center; gap: 1rem;">
-                <div style="position: relative; cursor: pointer;">
-                    <i class="fas fa-bell" style="font-size: 1.3rem; color: #6b7280;"></i>
-                    {% if messages_count > 0 %}
-                    <span
-                        style="position: absolute; top: -5px; right: -5px; background: #ef4444; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold;">{{
-                        messages_count }}</span>
-                    {% endif %}
-                </div>
-                <div
-                    style="width: 45px; height: 45px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.1rem;">
-                    {{ session.user_name[0] if session.user_name else 'P' }}
-                </div>
-            </div>
-        </div>
+<style>
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
 
-        <!-- Pending Doctor Requests Section -->
-        <div id="pendingRequestsSection" style="margin-bottom: 2rem; display: none;">
-            <div
-                style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-left: 4px solid #f59e0b; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <div style="display: flex; align-items: center; gap: 0.75rem;">
-                        <i class="fas fa-user-md" style="font-size: 1.5rem; color: #d97706;"></i>
-                        <h3 style="margin: 0; font-size: 1.2rem; color: #92400e; font-weight: 600;">Pending Doctor
-                            Requests</h3>
+    .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    .grid-4 {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1.25rem;
+    }
+
+    .appt-row {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        border-radius: var(--r-lg);
+        border: 1px solid var(--gray-100);
+        background: var(--gray-50);
+        transition: var(--t-fast);
+        margin-bottom: .75rem;
+    }
+
+    .appt-row:hover {
+        background: #f0f4ff;
+        border-color: var(--brand-100);
+    }
+
+    .appt-row:last-child {
+        margin-bottom: 0;
+    }
+
+    .date-badge {
+        background: var(--brand-500);
+        color: #fff;
+        border-radius: var(--r-md);
+        padding: .7rem .65rem;
+        text-align: center;
+        min-width: 52px;
+        flex-shrink: 0;
+    }
+
+    .date-badge .day {
+        font-size: 1.4rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .date-badge .mon {
+        font-size: .65rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        opacity: .85;
+    }
+
+    .metric-tile {
+        border-radius: var(--r-lg);
+        padding: 1.1rem;
+        display: flex;
+        flex-direction: column;
+        gap: .3rem;
+    }
+
+    .metric-tile .m-val {
+        font-size: 1.6rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .metric-tile .m-unit {
+        font-size: .72rem;
+        font-weight: 400;
+    }
+
+    .metric-tile .m-lbl {
+        font-size: .78rem;
+        font-weight: 600;
+    }
+
+    .req-card {
+        background: var(--surface);
+        border: 1px solid var(--gray-200);
+        border-radius: var(--r-lg);
+        padding: 1.25rem;
+        box-shadow: var(--shadow-xs);
+        transition: var(--t-fast);
+    }
+
+    @media (max-width: 900px) {
+        .grid-2 {
+            grid-template-columns: 1fr;
+        }
+
+        .grid-4 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 600px) {
+
+        .grid-3,
+        .grid-4 {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="animate-in">
+
+    <!-- ══════════ PAGE HEADER ══════════ -->
+    <div class="page-header">
+        <div class="page-header-left">
+            <h1 class="page-title">Patient Dashboard</h1>
+            <p class="page-subtitle">Welcome back, {{ session.user_name or 'Patient' }} — here's your health overview.
+            </p>
+        </div>
+        <div class="page-header-actions">
+            <a href="{{ url_for('book_appointment') }}" class="btn btn-primary">
+                <i class="fas fa-calendar-plus"></i> Book Appointment
+            </a>
+            <a href="{{ url_for('ai_companion') }}" class="btn btn-secondary">
+                <i class="fas fa-brain"></i> AI Analysis
+            </a>
+        </div>
+    </div>
+
+    <!-- ══════════ PENDING DOCTOR REQUESTS ══════════ -->
+    <div id="pendingRequestsSection" style="display:none; margin-bottom:1.5rem;">
+        <div
+            style="background:linear-gradient(135deg,#fffbeb,#fef3c7);border:1px solid #fde68a;border-left:4px solid var(--warning);border-radius:var(--r-xl);padding:1.5rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+                <div style="display:flex;align-items:center;gap:.75rem;">
+                    <div class="stat-icon amber"
+                        style="width:40px;height:40px;font-size:1rem;border-radius:var(--r-md);">
+                        <i class="fas fa-user-md"></i>
                     </div>
-                    <span id="requestCount"
-                        style="background: #d97706; color: white; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 600;"></span>
+                    <div>
+                        <div style="font-weight:700;color:var(--gray-900);">Pending Doctor Requests</div>
+                        <div style="font-size:.8rem;color:var(--gray-600);">Doctor wants to book an appointment with you
+                        </div>
+                    </div>
                 </div>
-                <div id="requestsList" style="display: flex; flex-direction: column; gap: 1rem;">
-                    <!-- Requests will be loaded here -->
-                </div>
+                <span id="requestCount" class="badge badge-amber" style="font-size:.85rem;padding:.4rem .9rem;"></span>
+            </div>
+            <div id="requestsList" style="display:flex;flex-direction:column;gap:.75rem;"></div>
+        </div>
+    </div>
+
+    <!-- ══════════ KPI STATS ══════════ -->
+    <div class="grid-4" style="margin-bottom:1.75rem;">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-calendar-check"></i></div>
+            <div class="stat-body">
+                <div class="stat-label">Appointments</div>
+                <div class="stat-value">{{ appointments|length if appointments else 0 }}</div>
+                <div class="stat-sub">Total scheduled</div>
             </div>
         </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-heartbeat"></i></div>
+            <div class="stat-body">
+                <div class="stat-label">Blood Pressure</div>
+                <div class="stat-value" style="font-size:1.2rem;">{{ vitals.bp or '—' }}</div>
+                <div class="stat-sub">mmHg</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon amber"><i class="fas fa-weight"></i></div>
+            <div class="stat-body">
+                <div class="stat-label">Weight</div>
+                <div class="stat-value">{{ vitals.weight or '—' }}</div>
+                <div class="stat-sub">lbs</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="fas fa-tint"></i></div>
+            <div class="stat-body">
+                <div class="stat-label">Blood Sugar</div>
+                <div class="stat-value" style="font-size:1.2rem;">{{ vitals.sugar or '—' }}</div>
+                <div class="stat-sub">mg/dL</div>
+            </div>
+        </div>
+    </div>
 
-        <!-- Main Grid -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <!-- ══════════ MAIN GRID ══════════ -->
+    <div class="grid-2" style="margin-bottom:1.75rem;">
 
-            <!-- Left Column: Upcoming Appointments -->
-            <div>
-                <h2 style="font-size: 1.3rem; color: #1f2937; margin-bottom: 1.5rem; font-weight: 600;">Upcoming
-                    Appointments</h2>
+        <!-- Left: Upcoming Appointments -->
+        <div class="card card-accent-blue card-pad">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-calendar-alt"></i> Upcoming Appointments</div>
+                <a href="{{ url_for('book_appointment') }}" class="btn btn-sm btn-primary">
+                    <i class="fas fa-plus"></i> New
+                </a>
+            </div>
 
-                <div
-                    style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <h3 style="font-size: 1.1rem; color: #374151; margin-bottom: 1.5rem; font-weight: 600;">Upcoming
-                        Appointments</h3>
-
-                    {% if appointments %}
-                    {% for appt in appointments[:3] %}
+            {% if appointments %}
+            {% for appt in appointments[:4] %}
+            <div class="appt-row">
+                <div class="date-badge">
+                    <div class="day">{{ appt.appointment_date[8:10] if appt.appointment_date else '?' }}</div>
+                    <div class="mon">{{ appt.appointment_date[5:7] if appt.appointment_date else 'N/A' }}</div>
+                </div>
+                <div class="avatar avatar-md avatar-purple">{{ appt.doctor_name[0] if appt.doctor_name else 'D' }}</div>
+                <div style="flex:1;min-width:0;">
                     <div
-                        style="display: flex; align-items: center; gap: 1rem; padding: 1.2rem; background: #f9fafb; border-radius: 12px; margin-bottom: 1rem;">
-                        <!-- Date Badge -->
-                        <div
-                            style="background: #3b82f6; color: white; border-radius: 10px; padding: 0.8rem; text-align: center; min-width: 60px;">
-                            <div style="font-size: 1.5rem; font-weight: bold; line-height: 1;">{{
-                                appt.appointment_date[8:10] if appt.appointment_date else '?' }}</div>
-                            <div style="font-size: 0.75rem; opacity: 0.9; text-transform: uppercase;">{{
-                                appt.appointment_date[5:7] if appt.appointment_date else 'N/A' }}</div>
-                        </div>
-
-                        <!-- Doctor Avatar -->
-                        <div
-                            style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.2rem;">
-                            {{ appt.doctor_name[0] if appt.doctor_name else 'D' }}
-                        </div>
-
-                        <!-- Appointment Details -->
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600; color: #1f2937; margin-bottom: 0.2rem;">
-                                {% if appt.appointment_date %}
-                                {{ appt.appointment_date[:10] }} at {{ appt.appointment_date[11:16] if
-                                appt.appointment_date|length > 10 else '10:00' }}
-                                {% else %}
-                                Date not set
-                                {% endif %}
-                            </div>
-                            <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.3rem;">
-                                {{ appt.doctor_name or 'Doctor' }} - {{ appt.specialization or 'General Practitioner' }}
-                            </div>
-                            <div
-                                style="font-size: 0.85rem; color: #9ca3af; display: flex; align-items: center; gap: 0.3rem;">
-                                <i class="far fa-clock"></i> Apil now
-                            </div>
-                        </div>
-
-                        <!-- Status & Action -->
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem;">
-                            {% if appt.status == 'CHECKED-IN' %}
-                            <span
-                                style="background: #fef3c7; color: #d97706; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
-                                <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Check-In
-                            </span>
-                            {% elif appt.status == 'BOOKED' %}
-                            <span
-                                style="background: #dbeafe; color: #2563eb; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
-                                <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Booked
-                            </span>
-                            {% elif appt.status == 'CONSULTING' %}
-                            <span
-                                style="background: #fce7f3; color: #db2777; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
-                                <i class="fas fa-circle" style="font-size: 0.5rem;"></i> Consulting
-                            </span>
-                            {% else %}
-                            <span
-                                style="background: #d1fae5; color: #059669; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
-                                <i class="fas fa-circle" style="font-size: 0.5rem;"></i> {{ appt.status }}
-                            </span>
-                            {% endif %}
-                            <button
-                                style="background: #3b82f6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; font-size: 0.85rem; cursor: pointer; font-weight: 500;">
-                                View Details
-                            </button>
-                        </div>
+                        style="font-weight:600;color:var(--gray-900);font-size:.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        {{ appt.doctor_name or 'Doctor' }}
                     </div>
-                    {% endfor %}
+                    <div style="font-size:.78rem;color:var(--gray-500);">{{ appt.specialization or 'General Medicine' }}
+                    </div>
+                </div>
+                <div style="flex-shrink:0;">
+                    {% if appt.status == 'BOOKED' %}
+                    <span class="badge badge-amber"><span class="dot dot-amber"></span> Booked</span>
+                    {% elif appt.status == 'CONFIRMED' %}
+                    <span class="badge badge-green"><span class="dot dot-green dot-pulse"></span> Confirmed</span>
+                    {% elif appt.status == 'CHECKED-IN' %}
+                    <span class="badge badge-blue"><span class="dot dot-blue dot-pulse"></span> Waiting</span>
+                    {% elif appt.status == 'CONSULTING' %}
+                    <span class="badge badge-purple"><span class="dot dot-pulse"
+                            style="background:var(--purple);"></span> Consulting</span>
+                    {% elif appt.status == 'COMPLETED' %}
+                    <span class="badge badge-green"><i class="fas fa-check" style="font-size:.6rem;"></i> Done</span>
                     {% else %}
-                    <div style="text-align: center; padding: 2rem; color: #9ca3af;">
-                        <i class="fas fa-calendar-times"
-                            style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-                        <p>No upcoming appointments</p>
-                        <a href="{{ url_for('book_appointment') }}" class="btn btn-primary"
-                            style="margin-top: 1rem;">Book
-                            Appointment</a>
-                    </div>
+                    <span class="badge badge-gray">{{ appt.status or 'Pending' }}</span>
                     {% endif %}
                 </div>
             </div>
+            {% endfor %}
+            {% else %}
+            <div class="empty-state">
+                <i class="fas fa-calendar-times"></i>
+                <h4>No Appointments</h4>
+                <p>You haven't scheduled any appointments yet.</p>
+                <a href="{{ url_for('book_appointment') }}" class="btn btn-primary" style="margin-top:1rem;">
+                    <i class="fas fa-plus"></i> Book Now
+                </a>
+            </div>
+            {% endif %}
+        </div>
 
-            <!-- Right Column: Health Overview -->
-            <div>
-                <h2 style="font-size: 1.3rem; color: #1f2937; margin-bottom: 1.5rem; font-weight: 600;">Health Overview
-                </h2>
-
-                <!-- Health Metrics Card -->
-                <div
-                    style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1.5rem;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
-                        <i class="fas fa-heartbeat" style="color: #ef4444; font-size: 1.3rem;"></i>
-                        <h3 style="font-size: 1.1rem; color: #374151; margin: 0; font-weight: 600;">BP</h3>
-                        <button onclick="document.getElementById('vitalsModal').style.display='flex'"
-                            style="margin-left: auto; background: none; border: none; color: #6b7280; cursor: pointer;">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                    </div>
-
-                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
-                        <!-- Blood Pressure -->
-                        <div style="background: #fee2e2; border-radius: 12px; padding: 1.2rem; position: relative;">
-                            <div style="color: #dc2626; font-size: 2rem; font-weight: bold; margin-bottom: 0.3rem;">
-                                {{ vitals.bp.split('/')[0] if vitals.bp and '/' in vitals.bp else vitals.bp }}
-                                <span style="font-size: 0.9rem; font-weight: normal;">/{{ vitals.bp.split('/')[1] if
-                                    vitals.bp and '/' in vitals.bp else '--' }}</span>
-                                <span style="font-size: 0.75rem; font-weight: normal; margin-left: 0.2rem;">mmHg</span>
-                            </div>
-                            <div style="color: #991b1b; font-size: 0.85rem; font-weight: 500;">Blood Pressure</div>
-                        </div>
-
-                        <!-- Weight -->
-                        <div style="background: #dbeafe; border-radius: 12px; padding: 1.2rem;">
-                            <div style="color: #1d4ed8; font-size: 2rem; font-weight: bold; margin-bottom: 0.3rem;">
-                                {{ vitals.weight }}
-                                <span style="font-size: 0.75rem; font-weight: normal; margin-left: 0.2rem;">lbs</span>
-                            </div>
-                            <div style="color: #1e40af; font-size: 0.85rem; font-weight: 500;">Weight</div>
-                        </div>
-
-                        <!-- Blood Sugar -->
-                        <div style="background: #d1fae5; border-radius: 12px; padding: 1.2rem;">
-                            <div style="color: #059669; font-size: 2rem; font-weight: bold; margin-bottom: 0.3rem;">
-                                {{ vitals.sugar }}
-                                <span style="font-size: 0.75rem; font-weight: normal; margin-left: 0.2rem;">mg/dL</span>
-                            </div>
-                            <div style="color: #047857; font-size: 0.85rem; font-weight: 500;">Blood Sugar</div>
-                        </div>
-                    </div>
-
-                    <button
-                        style="background: #3b82f6; color: white; border: none; padding: 0.7rem 1.5rem; border-radius: 8px; margin-top: 1.5rem; width: 100%; font-weight: 500; cursor: pointer;">
-                        View Full Report
+        <!-- Right: Health Vitals -->
+        <div>
+            <div class="card card-accent-green card-pad" style="margin-bottom:1.5rem;">
+                <div class="card-header">
+                    <div class="card-title"><i class="fas fa-heartbeat"></i> Health Vitals</div>
+                    <button onclick="document.getElementById('vitalsModal').classList.add('show')"
+                        class="btn btn-sm btn-ghost">
+                        <i class="fas fa-edit"></i> Edit
                     </button>
                 </div>
+                <div class="grid-3">
+                    <div class="metric-tile" style="background:var(--danger-light);">
+                        <div class="m-val" style="color:var(--danger-dark);">
+                            {{ vitals.bp.split('/')[0] if vitals.bp and '/' in vitals.bp else vitals.bp or '—' }}
+                            <span class="m-unit">/ {{ vitals.bp.split('/')[1] if vitals.bp and '/' in vitals.bp else '—'
+                                }} mmHg</span>
+                        </div>
+                        <div class="m-lbl" style="color:var(--danger-dark);">Blood Pressure</div>
+                    </div>
+                    <div class="metric-tile" style="background:var(--brand-50);">
+                        <div class="m-val" style="color:var(--brand-700);">
+                            {{ vitals.weight or '—' }}<span class="m-unit"> lbs</span>
+                        </div>
+                        <div class="m-lbl" style="color:var(--brand-800);">Weight</div>
+                    </div>
+                    <div class="metric-tile" style="background:var(--success-light);">
+                        <div class="m-val" style="color:var(--success-dark);">
+                            {{ vitals.sugar or '—' }}<span class="m-unit"> mg/dL</span>
+                        </div>
+                        <div class="m-lbl" style="color:var(--success-dark);">Blood Sugar</div>
+                    </div>
+                </div>
+                <div style="margin-top:1rem;">
+                    <a href="{{ url_for('patient_vault') }}" class="btn btn-secondary"
+                        style="width:100%;justify-content:center;">
+                        <i class="fas fa-file-medical"></i> View Medical Records
+                    </a>
+                </div>
+            </div>
 
-                <!-- Patient Tracking Card -->
-                <div
-                    style="background: white; border-radius: 16px; padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h3 style="font-size: 1.1rem; color: #374151; margin: 0; font-weight: 600;">Patient Tracking
-                        </h3>
-                        {% if upcoming and upcoming.status == 'COMPLETED' %}
-                        <span
-                            style="background: #d1fae5; color: #059669; padding: 0.3rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
-                            COMPLETED
-                        </span>
-                        {% endif %}
-                    </div>
-
-                    {% if upcoming %}
-                    <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                        With {{ upcoming.doctor_name or 'Doctor' }}
-                    </div>
-                    <div
-                        style="color: #9ca3af; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 2rem;">
-                        <i class="far fa-clock"></i> {{ upcoming.appointment_date[:10] if upcoming.appointment_date else
-                        'N/A' }}
-                    </div>
-                    {% else %}
-                    <div style="color: #6b7280; font-size: 0.9rem; margin-bottom: 0.5rem;">
-                        With None
-                    </div>
-                    <div
-                        style="color: #9ca3af; font-size: 0.85rem; display: flex; align-items: center; gap: 0.3rem; margin-bottom: 2rem;">
-                        <i class="far fa-clock"></i> N/A
-                    </div>
-                    {% endif %}
+            <!-- Quick Actions -->
+            <div class="card card-pad">
+                <div class="card-title" style="margin-bottom:1rem;"><i class="fas fa-bolt"></i> Quick Actions</div>
+                <div style="display:flex;flex-direction:column;gap:.6rem;">
+                    <a href="{{ url_for('patient_chat') }}" class="btn btn-secondary"
+                        style="justify-content:flex-start;">
+                        <i class="fas fa-comments" style="color:var(--brand-500);"></i> Chat with Doctor
+                    </a>
+                    <a href="{{ url_for('report_analysis') }}" class="btn btn-secondary"
+                        style="justify-content:flex-start;">
+                        <i class="fas fa-file-medical-alt" style="color:var(--success);"></i> Upload Lab Report
+                    </a>
+                    <a href="{{ url_for('patient_invoices') }}" class="btn btn-secondary"
+                        style="justify-content:flex-start;">
+                        <i class="fas fa-file-invoice-dollar" style="color:var(--warning);"></i> View Invoices
+                    </a>
+                    <a href="{{ url_for('ai_companion') }}" class="btn btn-secondary"
+                        style="justify-content:flex-start;">
+                        <i class="fas fa-brain" style="color:var(--purple);"></i> AI Health Companion
+                    </a>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Active Queue Management (Full Width) -->
-        <div
-            style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 2rem;">
-            <h2 style="font-size: 1.3rem; color: #1f2937; margin: 0 0 1.5rem 0; font-weight: 600;">Active Queue
-                Management</h2>
-
-            <table style="width: 100%; border-collapse: collapse;">
-                <thead style="background: #f9fafb; border-bottom: 2px solid #e5e7eb;">
+    <!-- ══════════ ACTIVE QUEUE TABLE ══════════ -->
+    <div class="card card-accent-teal" style="margin-bottom:1.75rem;">
+        <div class="card-pad" style="padding-bottom:.75rem;">
+            <div class="card-header">
+                <div class="card-title"><i class="fas fa-list-alt"></i> Active Queue Management</div>
+                <span class="badge badge-blue">{{ appointments|length if appointments else 0 }} total</span>
+            </div>
+        </div>
+        <div class="table-wrap"
+            style="border-radius:0;border-left:none;border-right:none;border-bottom:none;box-shadow:none;">
+            <table class="data-table">
+                <thead>
                     <tr>
-                        <th
-                            style="padding: 1rem; text-align: left; color: #6b7280; font-weight: 600; font-size: 0.9rem;">
-                            Patient</th>
-                        <th
-                            style="padding: 1rem; text-align: left; color: #6b7280; font-weight: 600; font-size: 0.9rem;">
-                            Date</th>
-                        <th
-                            style="padding: 1rem; text-align: left; color: #6b7280; font-weight: 600; font-size: 0.9rem;">
-                            Status</th>
-                        <th
-                            style="padding: 1rem; text-align: right; color: #6b7280; font-weight: 600; font-size: 0.9rem;">
-                            Actions</th>
+                        <th>Appointment</th>
+                        <th>Doctor</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th style="text-align:right;">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% if appointments %}
                     {% for appt in appointments %}
-                    <tr style="border-bottom: 1px solid #f3f4f6;">
-                        <td style="padding: 1rem;">
-                            <div style="font-weight: 500; color: #1f2937;">{{ session.user_name or 'Patient' }}</div>
-                            <div style="font-size: 0.85rem; color: #9ca3af;">{{ appt.symptoms[:30] if appt.symptoms else
-                                'General checkup' }}...</div>
+                    <tr>
+                        <td>
+                            <div style="font-weight:600;color:var(--gray-900);">{{ session.user_name or 'Patient' }}
+                            </div>
+                            <div style="font-size:.78rem;color:var(--gray-500);">{{ appt.symptoms[:40] if appt.symptoms
+                                else 'General checkup' }}{% if appt.symptoms and appt.symptoms|length > 40 %}...{% endif
+                                %}</div>
                         </td>
-                        <td style="padding: 1rem; color: #6b7280;">
+                        <td>
+                            <div style="display:flex;align-items:center;gap:.5rem;">
+                                <div class="avatar avatar-sm avatar-purple">{{ appt.doctor_name[0] if appt.doctor_name
+                                    else 'D' }}</div>
+                                <span style="font-size:.875rem;color:var(--gray-700);">{{ appt.doctor_name or 'Doctor'
+                                    }}</span>
+                            </div>
+                        </td>
+                        <td style="font-size:.875rem;color:var(--gray-600);">
+                            <i class="far fa-calendar" style="margin-right:.3rem;color:var(--gray-400);"></i>
                             {{ appt.appointment_date[:10] if appt.appointment_date else 'N/A' }}
                         </td>
-                        <td style="padding: 1rem;">
+                        <td>
                             {% if appt.status == 'BOOKED' %}
-                            <span
-                                style="background: #fef3c7; color: #d97706; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; display: inline-block;">
-                                PENDING
-                            </span>
+                            <span class="badge badge-amber">Pending</span>
                             {% elif appt.status == 'CONFIRMED' %}
-                            <span
-                                style="background: #d1fae5; color: #059669; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; display: inline-block;">
-                                CONFIRMED
-                            </span>
+                            <span class="badge badge-green">Confirmed</span>
                             {% elif appt.status == 'CHECKED-IN' %}
-                            <span
-                                style="background: #dbeafe; color: #2563eb; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; display: inline-block;">
-                                WAITING
-                            </span>
+                            <span class="badge badge-blue">Waiting</span>
                             {% elif appt.status == 'CONSULTING' %}
-                            <span
-                                style="background: #fce7f3; color: #db2777; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; display: inline-block;">
-                                CONSULTING
-                            </span>
+                            <span class="badge badge-purple">Consulting</span>
                             {% elif appt.status == 'COMPLETED' %}
-                            <span
-                                style="background: #d1fae5; color: #059669; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; display: inline-block;">
-                                COMPLETED
-                            </span>
+                            <span class="badge badge-green">Completed</span>
                             {% else %}
-                            <span
-                                style="background: #f3f4f6; color: #6b7280; padding: 0.4rem 0.8rem; border-radius: 20px; font-size: 0.85rem; font-weight: 500; display: inline-block;">
-                                {{ appt.status or 'PENDING' }}
-                            </span>
+                            <span class="badge badge-gray">{{ appt.status or 'Pending' }}</span>
                             {% endif %}
                         </td>
-                        <td style="padding: 1rem; text-align: right;">
-                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                                <button
-                                    style="background: white; border: 1px solid #d1d5db; color: #374151; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;"
-                                    onmouseover="this.style.background='#f9fafb'"
-                                    onmouseout="this.style.background='white'">
-                                    History
-                                </button>
+                        <td style="text-align:right;">
+                            <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+                                <button class="btn btn-sm btn-secondary">History</button>
                                 {% if appt.status in ['BOOKED', 'CONFIRMED', 'CHECKED-IN'] %}
-                                <button
-                                    style="background: #3b82f6; border: none; color: white; padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;"
-                                    onmouseover="this.style.background='#2563eb'"
-                                    onmouseout="this.style.background='#3b82f6'">
-                                    Advance
-                                </button>
+                                <button class="btn btn-sm btn-primary">Advance</button>
                                 {% endif %}
                             </div>
                         </td>
@@ -317,275 +386,219 @@
                     {% endfor %}
                     {% else %}
                     <tr>
-                        <td colspan="4" style="padding: 3rem; text-align: center; color: #9ca3af;">
-                            No appointments scheduled
+                        <td colspan="5">
+                            <div class="empty-state">
+                                <i class="fas fa-calendar-times"></i>
+                                <h4>No appointments scheduled</h4>
+                                <a href="{{ url_for('book_appointment') }}" class="btn btn-primary"
+                                    style="margin-top:.75rem;">Book Appointment</a>
+                            </div>
                         </td>
                     </tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
+    </div>
 
-        <!-- Patient Tracking Timeline (Full Width) -->
-        <div style="background: white; border-radius: 16px; padding: 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h2 style="font-size: 1.3rem; color: #1f2937; margin: 0; font-weight: 600;">Patient Tracking</h2>
-                {% if upcoming and upcoming.status == 'COMPLETED' %}
-                <span
-                    style="background: #d1fae5; color: #059669; padding: 0.4rem 1rem; border-radius: 20px; font-size: 0.9rem; font-weight: 500;">
-                    COMPLETED
-                </span>
-                {% endif %}
+    <!-- ══════════ PATIENT TRACKING TIMELINE ══════════ -->
+    <div class="card card-pad">
+        <div class="card-header">
+            <div class="card-title"><i class="fas fa-route"></i> Patient Tracking</div>
+            {% if upcoming and upcoming.status == 'COMPLETED' %}
+            <span class="badge badge-green"><i class="fas fa-check-circle"></i> Completed</span>
+            {% elif upcoming %}
+            <span class="badge badge-blue"><span class="dot dot-blue dot-pulse"></span> In Progress</span>
+            {% endif %}
+        </div>
+
+        {% if upcoming %}
+        <div style="font-size:.85rem;color:var(--gray-500);margin-bottom:1.5rem;">
+            Appointment with <strong style="color:var(--gray-800);">{{ upcoming.doctor_name or 'Doctor' }}</strong>
+            on <strong style="color:var(--gray-800);">{{ upcoming.appointment_date[:10] if upcoming.appointment_date
+                else 'N/A' }}</strong>
+        </div>
+        {% endif %}
+
+        <!-- Progress bar -->
+        <div class="progress-bar-wrap" style="margin-bottom:2rem;">
+            <div class="progress-bar" style="width:
+        {% if upcoming %}
+          {% if upcoming.status == 'COMPLETED' %}100%
+          {% elif upcoming.status == 'CONSULTING' %}75%
+          {% elif upcoming.status == 'CHECKED-IN' %}50%
+          {% elif upcoming.status == 'CONFIRMED' %}25%
+          {% else %}10%{% endif %}
+        {% else %}0%{% endif %};">
             </div>
+        </div>
 
-            <!-- Timeline -->
-            <div style="position: relative; padding: 2rem 0;">
-                <!-- Progress Line -->
+        <div class="timeline">
+            <!-- Step 1: Booked -->
+            <div class="timeline-step">
                 <div
-                    style="position: absolute; top: 50%; left: 10%; right: 10%; height: 4px; background: #e5e7eb; transform: translateY(-50%); z-index: 0;">
+                    class="timeline-node {% if upcoming and upcoming.status in ['BOOKED','CONFIRMED','CHECKED-IN','CONSULTING','COMPLETED'] %}active{% else %}idle{% endif %}">
+                    <i class="fas fa-calendar-check"></i>
                 </div>
-
-                {% if upcoming %}
-                <!-- Active Progress Line -->
                 <div
-                    style="position: absolute; top: 50%; left: 10%; 
-                {% if upcoming.status == 'COMPLETED' %}
-                    width: 80%;
-                {% elif upcoming.status == 'CONSULTING' %}
-                    width: 53%;
-                {% elif upcoming.status == 'CHECKED-IN' %}
-                    width: 27%;
-                {% else %}
-                    width: 0%;
-                {% endif %}
-                height: 4px; background: #3b82f6; transform: translateY(-50%); z-index: 0; transition: width 0.5s ease;">
-                </div>
-                {% endif %}
-
+                    class="timeline-label {% if not upcoming or upcoming.status not in ['BOOKED','CONFIRMED','CHECKED-IN','CONSULTING','COMPLETED'] %}idle{% endif %}">
+                    Booked</div>
+            </div>
+            <!-- Step 2: Confirmed -->
+            <div class="timeline-step">
                 <div
-                    style="display: flex; justify-content: space-between; position: relative; z-index: 1; max-width: 80%; margin: 0 auto;">
-                    <!-- Step 1: Booked -->
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
-                        <div
-                            style="width: 60px; height: 60px; border-radius: 50%; background: {{ '#3b82f6' if upcoming and upcoming.status in ['BOOKED', 'CHECKED-IN', 'CONSULTING', 'COMPLETED'] else '#e5e7eb' }}; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <i class="fas fa-calendar-check" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <div
-                            style="font-size: 0.95rem; color: {{ '#1f2937' if upcoming and upcoming.status in ['BOOKED', 'CHECKED-IN', 'CONSULTING', 'COMPLETED'] else '#9ca3af' }}; font-weight: 600;">
-                            Booked</div>
-                    </div>
-
-                    <!-- Step 2: Check-In -->
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
-                        <div
-                            style="width: 60px; height: 60px; border-radius: 50%; background: {{ '#3b82f6' if upcoming and upcoming.status in ['CHECKED-IN', 'CONSULTING', 'COMPLETED'] else '#e5e7eb' }}; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <i class="fas fa-clipboard-check" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <div
-                            style="font-size: 0.95rem; color: {{ '#1f2937' if upcoming and upcoming.status in ['CHECKED-IN', 'CONSULTING', 'COMPLETED'] else '#9ca3af' }}; font-weight: 600;">
-                            Check-In</div>
-                    </div>
-
-                    <!-- Step 3: Consulting -->
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
-                        <div
-                            style="width: 60px; height: 60px; border-radius: 50%; background: {{ '#3b82f6' if upcoming and upcoming.status in ['CONSULTING', 'COMPLETED'] else '#e5e7eb' }}; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <i class="fas fa-user-md" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <div
-                            style="font-size: 0.95rem; color: {{ '#1f2937' if upcoming and upcoming.status in ['CONSULTING', 'COMPLETED'] else '#9ca3af' }}; font-weight: 600;">
-                            Consulting</div>
-                    </div>
-
-                    <!-- Step 4: Completed -->
-                    <div style="display: flex; flex-direction: column; align-items: center; gap: 0.8rem;">
-                        <div
-                            style="width: 60px; height: 60px; border-radius: 50%; background: {{ '#10b981' if upcoming and upcoming.status == 'COMPLETED' else '#e5e7eb' }}; display: flex; align-items: center; justify-content: center; color: white; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
-                        </div>
-                        <div
-                            style="font-size: 0.95rem; color: {{ '#1f2937' if upcoming and upcoming.status == 'COMPLETED' else '#9ca3af' }}; font-weight: 600;">
-                            Completed</div>
-                    </div>
+                    class="timeline-node {% if upcoming and upcoming.status in ['CONFIRMED','CHECKED-IN','CONSULTING','COMPLETED'] %}active{% else %}idle{% endif %}">
+                    <i class="fas fa-clipboard-check"></i>
                 </div>
+                <div
+                    class="timeline-label {% if not upcoming or upcoming.status not in ['CONFIRMED','CHECKED-IN','CONSULTING','COMPLETED'] %}idle{% endif %}">
+                    Confirmed</div>
+            </div>
+            <!-- Step 3: Checked-In -->
+            <div class="timeline-step">
+                <div
+                    class="timeline-node {% if upcoming and upcoming.status in ['CHECKED-IN','CONSULTING','COMPLETED'] %}active{% else %}idle{% endif %}">
+                    <i class="fas fa-sign-in-alt"></i>
+                </div>
+                <div
+                    class="timeline-label {% if not upcoming or upcoming.status not in ['CHECKED-IN','CONSULTING','COMPLETED'] %}idle{% endif %}">
+                    Check-In</div>
+            </div>
+            <!-- Step 4: Consulting -->
+            <div class="timeline-step">
+                <div
+                    class="timeline-node {% if upcoming and upcoming.status in ['CONSULTING','COMPLETED'] %}active{% else %}idle{% endif %}">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div
+                    class="timeline-label {% if not upcoming or upcoming.status not in ['CONSULTING','COMPLETED'] %}idle{% endif %}">
+                    Consulting</div>
+            </div>
+            <!-- Step 5: Completed -->
+            <div class="timeline-step">
+                <div
+                    class="timeline-node {% if upcoming and upcoming.status == 'COMPLETED' %}done{% else %}idle{% endif %}">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="timeline-label {% if not upcoming or upcoming.status != 'COMPLETED' %}idle{% endif %}">
+                    Completed</div>
             </div>
         </div>
     </div>
 
-    <!-- Vitals Edit Modal -->
-    <div id="vitalsModal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 1000;">
-        <div
-            style="background: white; padding: 2rem; border-radius: 16px; width: 90%; max-width: 400px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
-            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #1f2937;">Update Vitals</h3>
-            <form action="{{ url_for('update_vitals') }}" method="POST">
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; color: #4b5563; font-size: 0.9rem;">Weight
-                        (lbs)</label>
-                    <input type="number" name="weight" value="{{ vitals.weight }}" class="form-control"
-                        style="width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px;">
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; color: #4b5563; font-size: 0.9rem;">Blood
-                        Pressure
-                        (e.g. 120/80)</label>
-                    <input type="text" name="bp" value="{{ vitals.bp }}" class="form-control"
-                        style="width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px;">
-                </div>
-                <div style="margin-bottom: 1.5rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; color: #4b5563; font-size: 0.9rem;">Blood Sugar
-                        (mg/dL)</label>
-                    <input type="number" name="sugar" value="{{ vitals.sugar }}" class="form-control"
-                        style="width: 100%; padding: 0.8rem; border: 1px solid #d1d5db; border-radius: 8px;">
-                </div>
-                <div style="display: flex; gap: 1rem;">
-                    <button type="button" onclick="document.getElementById('vitalsModal').style.display='none'"
-                        style="flex: 1; padding: 0.8rem; border: 1px solid #d1d5db; background: white; border-radius: 8px; cursor: pointer;">Cancel</button>
-                    <button type="submit"
-                        style="flex: 1; padding: 0.8rem; background: #2563eb; color: white; border: none; border-radius: 8px; cursor: pointer;">Save</button>
-                </div>
-            </form>
+</div>
+
+<!-- ══════════ VITALS MODAL ══════════ -->
+<div id="vitalsModal" class="modal-overlay">
+    <div class="modal-box">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+            <div class="modal-title" style="margin:0;">
+                <i class="fas fa-heartbeat" style="color:var(--danger);margin-right:.4rem;"></i> Update Vitals
+            </div>
+            <button onclick="document.getElementById('vitalsModal').classList.remove('show')"
+                class="btn btn-ghost btn-sm"><i class="fas fa-times"></i></button>
         </div>
+        <form action="{{ url_for('update_vitals') }}" method="POST">
+            <div class="form-group">
+                <label class="form-label">Weight (lbs)</label>
+                <input type="number" name="weight" value="{{ vitals.weight }}" class="form-input"
+                    placeholder="e.g. 154">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Blood Pressure (e.g. 120/80)</label>
+                <input type="text" name="bp" value="{{ vitals.bp }}" class="form-input" placeholder="120/80">
+            </div>
+            <div class="form-group" style="margin-bottom:1.5rem;">
+                <label class="form-label">Blood Sugar (mg/dL)</label>
+                <input type="number" name="sugar" value="{{ vitals.sugar }}" class="form-input" placeholder="e.g. 95">
+            </div>
+            <div style="display:flex;gap:.75rem;">
+                <button type="button" onclick="document.getElementById('vitalsModal').classList.remove('show')"
+                    class="btn btn-secondary" style="flex:1;">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="flex:1;">
+                    <i class="fas fa-save"></i> Save Vitals
+                </button>
+            </div>
+        </form>
     </div>
-</div>
-</div>
 </div>
 
 <script>
-    // Load pending appointment requests on page load
     document.addEventListener('DOMContentLoaded', function () {
         loadPendingRequests();
+
+        // Close modal on overlay click
+        document.getElementById('vitalsModal').addEventListener('click', function (e) {
+            if (e.target === this) this.classList.remove('show');
+        });
     });
 
     async function loadPendingRequests() {
         try {
-            const response = await fetch('/api/appointment_request/list?status=PENDING');
-            const data = await response.json();
-
-            if (data.status === 'success' && data.requests && data.requests.length > 0) {
-                displayRequests(data.requests);
+            const r = await fetch('/api/appointment_request/list?status=PENDING');
+            const d = await r.json();
+            if (d.status === 'success' && d.requests && d.requests.length > 0) {
+                displayRequests(d.requests);
             }
-        } catch (error) {
-            console.error('Error loading requests:', error);
-        }
+        } catch (e) { console.error('Error loading requests:', e); }
     }
 
     function displayRequests(requests) {
         const section = document.getElementById('pendingRequestsSection');
         const list = document.getElementById('requestsList');
         const count = document.getElementById('requestCount');
-
         section.style.display = 'block';
-        count.textContent = requests.length;
-
+        count.textContent = requests.length + ' Pending';
         list.innerHTML = requests.map(req => `
-        <div style="background: white; border-radius: 10px; padding: 1.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-                <div style="flex: 1;">
-                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 1.1rem;">
-                            ${req.doctor_name ? req.doctor_name[0] : 'D'}
-                        </div>
-                        <div>
-                            <div style="font-weight: 600; color: #1f2937; font-size: 1.05rem;">Dr. ${req.doctor_name || 'Unknown'}</div>
-                            <div style="font-size: 0.85rem; color: #6b7280;">${req.doctor_specialization || 'General Practitioner'}</div>
-                        </div>
-                    </div>
-                    <div style="margin-left: 48px;">
-                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem;">
-                            <i class="far fa-calendar" style="color: #6b7280;"></i>
-                            <span style="color: #374151; font-size: 0.95rem;">${formatDate(req.proposed_date)}</span>
-                        </div>
-                        ${req.reason ? `
-                        <div style="display: flex; align-items: start; gap: 0.5rem; margin-top: 0.5rem;">
-                            <i class="fas fa-info-circle" style="color: #6b7280; margin-top: 0.2rem;"></i>
-                            <span style="color: #6b7280; font-size: 0.9rem;">${req.reason}</span>
-                        </div>
-                        ` : ''}
-                    </div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 0.75rem; margin-left: 48px;">
-                <button onclick="acceptRequest('${req.request_id}')" 
-                    style="flex: 1; background: #10b981; color: white; border: none; padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
-                    onmouseover="this.style.background='#059669'" 
-                    onmouseout="this.style.background='#10b981'">
-                    <i class="fas fa-check"></i> Accept
-                </button>
-                <button onclick="declineRequest('${req.request_id}')" 
-                    style="flex: 1; background: #ef4444; color: white; border: none; padding: 0.7rem 1.25rem; border-radius: 8px; font-weight: 500; cursor: pointer; transition: all 0.2s;"
-                    onmouseover="this.style.background='#dc2626'" 
-                    onmouseout="this.style.background='#ef4444'">
-                    <i class="fas fa-times"></i> Decline
-                </button>
-            </div>
+    <div class="req-card">
+      <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+        <div class="avatar avatar-md avatar-blue">${req.doctor_name ? req.doctor_name[0] : 'D'}</div>
+        <div>
+          <div style="font-weight:700;color:var(--gray-900);">Dr. ${req.doctor_name || 'Unknown'}</div>
+          <div style="font-size:.8rem;color:var(--gray-500);">${req.doctor_specialization || 'General Practitioner'}</div>
         </div>
-    `).join('');
+        <div style="margin-left:auto;font-size:.8rem;color:var(--gray-500);">
+          <i class="far fa-calendar"></i> ${formatDate(req.proposed_date)}
+        </div>
+      </div>
+      ${req.reason ? `<div style="font-size:.85rem;color:var(--gray-600);background:var(--gray-50);padding:.6rem .9rem;border-radius:var(--r-sm);margin-bottom:1rem;"><i class="fas fa-info-circle" style="margin-right:.3rem;color:var(--gray-400);"></i>${req.reason}</div>` : ''}
+      <div style="display:flex;gap:.6rem;">
+        <button onclick="acceptRequest('${req.request_id}')" class="btn btn-success btn-sm" style="flex:1;">
+          <i class="fas fa-check"></i> Accept
+        </button>
+        <button onclick="declineRequest('${req.request_id}')" class="btn btn-danger btn-sm" style="flex:1;">
+          <i class="fas fa-times"></i> Decline
+        </button>
+      </div>
+    </div>
+  `).join('');
     }
 
     function formatDate(dateStr) {
         if (!dateStr) return 'Date not set';
         try {
-            const date = new Date(dateStr);
-            return date.toLocaleDateString('en-US', {
-                weekday: 'short',
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch (e) {
-            return dateStr;
-        }
+            return new Date(dateStr).toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
+        } catch (e) { return dateStr; }
     }
 
-    async function acceptRequest(requestId) {
+    async function acceptRequest(id) {
         if (!confirm('Accept this appointment request?')) return;
-
         try {
-            const response = await fetch(`/api/appointment_request/accept/${requestId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' }
-            });
-
-            const data = await response.json();
-
-            if (data.status === 'success') {
-                alert('Appointment request accepted! The appointment has been added to your schedule.');
-                location.reload();
-            } else {
-                alert('Error: ' + (data.message || 'Failed to accept request'));
-            }
-        } catch (error) {
-            console.error('Error accepting request:', error);
-            alert('Failed to accept request. Please try again.');
-        }
+            const r = await fetch(`/api/appointment_request/accept/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+            const d = await r.json();
+            if (d.status === 'success') { alert('Appointment accepted!'); location.reload(); }
+            else alert('Error: ' + (d.message || 'Failed'));
+        } catch (e) { alert('Failed. Please try again.'); }
     }
 
-    async function declineRequest(requestId) {
-        const reason = prompt('Optional: Provide a reason for declining (or leave blank):');
-
+    async function declineRequest(id) {
+        const reason = prompt('Reason for declining (optional):');
         try {
-            const response = await fetch(`/api/appointment_request/decline/${requestId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reason: reason || '' })
-            });
-
-            const data = await response.json();
-
-            if (data.status === 'success') {
-                alert('Appointment request declined.');
-                location.reload();
-            } else {
-                alert('Error: ' + (data.message || 'Failed to decline request'));
-            }
-        } catch (error) {
-            console.error('Error declining request:', error);
-            alert('Failed to decline request. Please try again.');
-        }
+            const r = await fetch(`/api/appointment_request/decline/${id}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: reason || '' }) });
+            const d = await r.json();
+            if (d.status === 'success') { alert('Request declined.'); location.reload(); }
+            else alert('Error: ' + (d.message || 'Failed'));
+        } catch (e) { alert('Failed. Please try again.'); }
     }
 </script>
-
 {% endblock %}
