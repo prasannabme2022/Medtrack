@@ -4,67 +4,742 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Medtrack</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Sign In | MedTrack</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            background: #0f172a;
+        }
+
+        /* ── Left Panel ─────────────────── */
+        .left {
+            flex: 1;
+            background: linear-gradient(145deg, #0f172a 0%, #1e3a5f 45%, #0c4a6e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 3rem 2.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 70% 60% at 30% 40%, rgba(56, 189, 248, .2) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 50% at 80% 80%, rgba(16, 185, 129, .12) 0%, transparent 60%);
+        }
+
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, .06);
+            animation: ringPulse 6s ease-in-out infinite;
+        }
+
+        .ring:nth-child(1) {
+            width: 300px;
+            height: 300px;
+            top: -80px;
+            right: -80px;
+        }
+
+        .ring:nth-child(2) {
+            width: 200px;
+            height: 200px;
+            top: 40px;
+            right: 40px;
+            animation-delay: 1.5s;
+        }
+
+        .ring:nth-child(3) {
+            width: 450px;
+            height: 450px;
+            bottom: -120px;
+            left: -100px;
+            animation-delay: 3s;
+        }
+
+        @keyframes ringPulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: .4
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: .1
+            }
+        }
+
+        .left-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 420px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: .6rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .brand-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(56, 189, 248, .4);
+        }
+
+        .brand-name {
+            color: #fff;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: -.02em;
+        }
+
+        .brand-name span {
+            color: #38bdf8;
+        }
+
+        .left-headline {
+            font-size: clamp(1.8rem, 3vw, 2.6rem);
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+
+        .left-headline em {
+            font-style: normal;
+            color: #38bdf8;
+        }
+
+        .left-sub {
+            color: rgba(255, 255, 255, .6);
+            font-size: .97rem;
+            line-height: 1.7;
+            margin-bottom: 2.5rem;
+        }
+
+        /* AWS pills */
+        .aws-pills {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .pill {
+            background: rgba(255, 255, 255, .08);
+            border: 1px solid rgba(255, 255, 255, .14);
+            color: #94a3b8;
+            font-size: .72rem;
+            font-weight: 600;
+            padding: .3rem .8rem;
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+        .pill i {
+            color: #f59e0b;
+            font-size: .65rem;
+        }
+
+        /* Stats */
+        .stats {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-n {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #38bdf8;
+        }
+
+        .stat-l {
+            font-size: .7rem;
+            color: rgba(255, 255, 255, .4);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        /* ── Right Panel ────────────────── */
+        .right {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #fff;
+            width: 440px;
+            min-width: 400px;
+            padding: 3rem 2.5rem;
+        }
+
+        .form-box {
+            width: 100%;
+            max-width: 380px;
+        }
+
+        .form-header {
+            margin-bottom: 2rem;
+        }
+
+        .form-header h2 {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: .35rem;
+        }
+
+        .form-header p {
+            color: #6b7280;
+            font-size: .9rem;
+        }
+
+        /* Flash messages */
+        .flash-msg {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            border-radius: 10px;
+            padding: .75rem 1rem;
+            margin-bottom: 1.25rem;
+            font-size: .87rem;
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+        }
+
+        .flash-success {
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #16a34a;
+        }
+
+        /* Form fields */
+        .field {
+            margin-bottom: 1.25rem;
+        }
+
+        .field label {
+            display: block;
+            font-size: .82rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: .45rem;
+        }
+
+        .field-wrap {
+            position: relative;
+        }
+
+        .field-wrap i {
+            position: absolute;
+            left: .95rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: .9rem;
+            pointer-events: none;
+        }
+
+        .field input {
+            width: 100%;
+            padding: .75rem .95rem .75rem 2.6rem;
+            border: 1.5px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: .93rem;
+            font-family: 'Inter', sans-serif;
+            color: #0f172a;
+            background: #f9fafb;
+            transition: all .2s;
+            outline: none;
+        }
+
+        .field input:focus {
+            border-color: #38bdf8;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, .12);
+        }
+
+        .field input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Toggle password */
+        .toggle-pw {
+            position: absolute;
+            right: .95rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #9ca3af;
+            padding: 0;
+            font-size: .9rem;
+        }
+
+        .toggle-pw:hover {
+            color: #6b7280;
+        }
+
+        /* Role tabs */
+        .role-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: .5rem;
+            margin-bottom: 1.4rem;
+        }
+
+        .role-tab {
+            padding: .55rem;
+            border-radius: 10px;
+            border: 1.5px solid #e5e7eb;
+            background: #f9fafb;
+            cursor: pointer;
+            text-align: center;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #6b7280;
+            transition: all .2s;
+        }
+
+        .role-tab.active {
+            border-color: #38bdf8;
+            background: #eff9ff;
+            color: #0ea5e9;
+        }
+
+        .role-tab i {
+            display: block;
+            font-size: 1rem;
+            margin-bottom: .2rem;
+        }
+
+        /* Submit button */
+        .btn-submit {
+            width: 100%;
+            padding: .85rem;
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            color: #fff;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all .25s;
+            margin-top: .5rem;
+            box-shadow: 0 6px 20px rgba(14, 165, 233, .35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: .5rem;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 28px rgba(14, 165, 233, .45);
+        }
+
+        .btn-submit:active {
+            transform: none;
+        }
+
+        /* Links */
+        .form-links {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1.2rem;
+            font-size: .83rem;
+        }
+
+        .form-links a {
+            color: #0ea5e9;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .form-links a:hover {
+            text-decoration: underline;
+        }
+
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            margin: 1.4rem 0;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            font-size: .75rem;
+            color: #9ca3af;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Demo credentials */
+        .demo-box {
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+            border: 1px solid #bae6fd;
+            border-radius: 12px;
+            padding: 1rem 1.1rem;
+        }
+
+        .demo-box-title {
+            font-size: .73rem;
+            font-weight: 700;
+            color: #0369a1;
+            text-transform: uppercase;
+            letter-spacing: .07em;
+            margin-bottom: .5rem;
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+        }
+
+        .demo-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: .3rem;
+        }
+
+        .demo-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .demo-label {
+            display: flex;
+            align-items: center;
+            gap: .4rem;
+            font-size: .78rem;
+            font-weight: 600;
+            color: #0f172a;
+        }
+
+        .demo-label i {
+            font-size: .7rem;
+        }
+
+        .demo-fill {
+            font-size: .73rem;
+            background: #fff;
+            border: 1px solid #bae6fd;
+            color: #0369a1;
+            padding: .2rem .6rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            transition: all .15s;
+        }
+
+        .demo-fill:hover {
+            background: #0ea5e9;
+            color: #fff;
+            border-color: #0ea5e9;
+        }
+
+        /* Admin link */
+        .admin-link {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: .78rem;
+            color: #9ca3af;
+        }
+
+        .admin-link a {
+            color: #6b7280;
+            font-weight: 500;
+            text-decoration: none;
+        }
+
+        .admin-link a:hover {
+            color: #374151;
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .left {
+                display: none;
+            }
+
+            .right {
+                width: 100%;
+                min-width: unset;
+            }
+        }
+
+        /* Loading spinner */
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, .4);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
 </head>
 
 <body>
 
-    <div class="login-container">
-        <div class="login-left glass-panel">
-            <div class="login-form-box">
-                <h1 class="text-gradient" style="margin-bottom: 0.5rem;">Medtrack.</h1>
-                <p style="color: #6b7280; margin-bottom: 2rem;">Patient Journey Management System</p>
+    <!-- ── Left Panel ───────────────────────────────────── -->
+    <div class="left">
+        <div class="ring"></div>
+        <div class="ring"></div>
+        <div class="ring"></div>
 
-                {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                {% for category, message in messages %}
-                <div style="color: red; margin-bottom: 1rem;">{{ message }}</div>
-                {% endfor %}
-                {% endif %}
-                {% endwith %}
+        <div class="left-content">
+            <div class="brand">
+                <div class="brand-icon"><i class="fas fa-heartbeat"></i></div>
+                <div class="brand-name">Med<span>Track</span></div>
+            </div>
 
-                <form method="POST">
-                    <div class="form-group">
-                        <label class="form-label">Email Address</label>
-                        <input type="email" name="email" class="form-input" placeholder="e.g. patient@example.com"
-                            required value="patient@example.com">
-                    </div>
+            <h1 class="left-headline">
+                Healthcare <em>Reimagined</em><br>with AWS Cloud AI
+            </h1>
+            <p class="left-sub">
+                Intelligent multimodal disease prediction,
+                secure medical records, and real-time appointment management
+                — powered by 7 AWS services.
+            </p>
 
-                    <div class="form-group">
-                        <label class="form-label">Password</label>
-                        <input type="password" name="password" class="form-input" placeholder="••••••••" required
-                            value="password123">
-                    </div>
+            <div class="aws-pills">
+                <span class="pill"><i class="fas fa-database"></i>DynamoDB</span>
+                <span class="pill"><i class="fas fa-robot"></i>Bedrock</span>
+                <span class="pill"><i class="fas fa-eye"></i>Rekognition</span>
+                <span class="pill"><i class="fas fa-file-alt"></i>Textract</span>
+                <span class="pill"><i class="fas fa-stethoscope"></i>Comprehend</span>
+                <span class="pill"><i class="fas fa-archive"></i>S3</span>
+                <span class="pill"><i class="fas fa-bell"></i>SNS</span>
+            </div>
 
-                    <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
-
-                    <div style="text-align: center; margin-top: 1rem;">
-                        <a href="{{ url_for('signup') }}"
-                            style="color: #2563eb; text-decoration: none; font-weight: 500;">
-                            Don't have an account? Create one
-                        </a>
-                    </div>
-
-                    <div style="margin-top: 1.5rem; font-size: 0.9rem; color: #6b7280; text-align: center;">
-                        <p><strong>Demo Credentials:</strong></p>
-                        <p>Patient: patient@example.com / password123</p>
-                        <p>Doctor: doctor@example.com / password123</p>
-                    </div>
-                </form>
-                </form>
-
-                <div style="margin-top: 2rem; text-align: center; border-top: 1px solid #f3f4f6; padding-top: 1rem;">
-                    <a href="{{ url_for('admin_login') }}"
-                        style="font-size: 0.8rem; color: #6b7280; text-decoration: none;">
-                        System Administrator?
-                    </a>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-n">9</div>
+                    <div class="stat-l">DB Tables</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-n">7</div>
+                    <div class="stat-l">AWS Services</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-n">AES-256</div>
+                    <div class="stat-l">Encrypted</div>
                 </div>
             </div>
         </div>
-        <div class="login-right"></div>
     </div>
+
+    <!-- ── Right Panel ──────────────────────────────────── -->
+    <div class="right">
+        <div class="form-box">
+
+            <div class="form-header">
+                <h2>Welcome back 👋</h2>
+                <p>Sign in to your MedTrack account to continue.</p>
+            </div>
+
+            <!-- Flash Messages -->
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="flash-msg {% if category == 'success' %}flash-success{% endif %}">
+                <i class="fas fa-{% if category == 'success' %}check-circle{% else %}exclamation-circle{% endif %}"></i>
+                {{ message }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- Role Selector -->
+            <div class="role-tabs">
+                <div class="role-tab active" id="tab-patient" onclick="selectRole('patient')">
+                    <i class="fas fa-user-injured"></i>Patient
+                </div>
+                <div class="role-tab" id="tab-doctor" onclick="selectRole('doctor')">
+                    <i class="fas fa-user-md"></i>Doctor
+                </div>
+                <div class="role-tab" id="tab-admin" onclick="selectRole('admin')">
+                    <i class="fas fa-shield-alt"></i>Admin
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <form method="POST" id="loginForm" onsubmit="showLoading()">
+                <div class="field">
+                    <label>Email Address</label>
+                    <div class="field-wrap">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" name="email" id="emailInput" placeholder="you@example.com" required
+                            value="patient@example.com">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label>Password</label>
+                    <div class="field-wrap">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" name="password" id="pwInput" placeholder="••••••••" required
+                            value="password123">
+                        <button type="button" class="toggle-pw" onclick="togglePw()" id="pwToggle">
+                            <i class="fas fa-eye" id="pwEye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    <span id="btnText"><i class="fas fa-sign-in-alt"></i> Sign In</span>
+                    <span class="spinner" id="spinner"></span>
+                </button>
+            </form>
+
+            <div class="form-links">
+                <a href="{{ url_for('signup') }}"><i class="fas fa-user-plus"></i> Create Account</a>
+                <a href="{{ url_for('about') }}"><i class="fas fa-info-circle"></i> About MedTrack</a>
+            </div>
+
+            <div class="divider"><span>Quick Fill — Demo Credentials</span></div>
+
+            <!-- Demo Credentials Box -->
+            <div class="demo-box">
+                <div class="demo-box-title"><i class="fas fa-flask"></i> Test Accounts</div>
+
+                <div class="demo-row">
+                    <div class="demo-label"><i class="fas fa-user-injured" style="color:#0ea5e9;"></i> Patient</div>
+                    <button class="demo-fill" onclick="fillCreds('patient@example.com','password123','patient')">
+                        Fill Patient
+                    </button>
+                </div>
+
+                <div class="demo-row">
+                    <div class="demo-label"><i class="fas fa-user-md" style="color:#6366f1;"></i> Doctor</div>
+                    <button class="demo-fill" onclick="fillCreds('doctor@example.com','password123','doctor')">
+                        Fill Doctor
+                    </button>
+                </div>
+
+                <div class="demo-row">
+                    <div class="demo-label"><i class="fas fa-shield-alt" style="color:#f59e0b;"></i> Admin</div>
+                    <button class="demo-fill" onclick="fillCreds('admin@medtrack.com','admin123','admin')">
+                        Fill Admin
+                    </button>
+                </div>
+            </div>
+
+            <div class="admin-link">
+                <a href="{{ url_for('admin_login') }}">
+                    <i class="fas fa-cog"></i> System Administrator Portal
+                </a>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // Role selector
+        function selectRole(role) {
+            document.querySelectorAll('.role-tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + role).classList.add('active');
+        }
+
+        // Fill demo credentials
+        function fillCreds(email, pw, role) {
+            document.getElementById('emailInput').value = email;
+            document.getElementById('pwInput').value = pw;
+            selectRole(role);
+            // Animate the button
+            document.getElementById('loginForm').classList.add('ready');
+        }
+
+        // Toggle password visibility
+        function togglePw() {
+            const inp = document.getElementById('pwInput');
+            const eye = document.getElementById('pwEye');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                eye.className = 'fas fa-eye-slash';
+            } else {
+                inp.type = 'password';
+                eye.className = 'fas fa-eye';
+            }
+        }
+
+        // Show spinner on submit
+        function showLoading() {
+            document.getElementById('btnText').style.display = 'none';
+            document.getElementById('spinner').style.display = 'block';
+            document.getElementById('submitBtn').disabled = true;
+            setTimeout(() => {
+                document.getElementById('btnText').style.display = 'flex';
+                document.getElementById('spinner').style.display = 'none';
+                document.getElementById('submitBtn').disabled = false;
+            }, 8000);
+        }
+
+        // Auto-detect role from email
+        document.getElementById('emailInput').addEventListener('input', function () {
+            const email = this.value.toLowerCase();
+            if (email.includes('admin')) selectRole('admin');
+            else if (email.includes('doctor') || email.includes('dr.')) selectRole('doctor');
+            else selectRole('patient');
+        });
+    </script>
 
 </body>
 
