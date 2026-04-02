@@ -1,0 +1,30 @@
+# Core Flask Framework
+Flask==3.0.0
+Werkzeug==3.0.1
+
+# Web Server (Production - Lightweight)
+waitress==3.0.0
+gunicorn==21.2.0
+
+# AWS Services (Required for DynamoDB & SNS)
+boto3==1.34.0
+botocore==1.34.0
+
+# Security & Authentication
+python-dotenv==1.0.0
+
+# Date & Time Management
+pytz==2024.1
+
+# Machine Learning (Lightweight - Without TensorFlow)
+scikit-learn==1.3.0
+numpy==1.24.3
+joblib==1.3.1
+
+# Image Processing
+pillow==10.0.0
+
+# NOTE: TensorFlow commented out for budget hosting (saves 500MB+ RAM)
+# tensorflow==2.13.0
+
+# Total estimated size: ~200MB (vs ~700MB with TensorFlow)

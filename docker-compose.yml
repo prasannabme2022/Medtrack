@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  medtrack:
+    build: .
+    container_name: medtrack_app
+    restart: always
+    ports:
+      - "80:8000"
+    environment:
+      - FLASK_APP=app.py
+      - FLASK_ENV=production
+      - SECRET_KEY=change_this_in_production_please
+    volumes:
+      # Persist uploads
+      - ./medtrack/uploads:/app/medtrack/uploads
